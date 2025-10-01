@@ -22,15 +22,14 @@ const Hero = () => {
           </div>
           
           <h1 className="text-5xl md:text-7xl font-bold text-foreground leading-tight">
-            Your Pet's Health,
+            Pet Health Lab - AI Pet Care Tools & 
             <span className="block bg-gradient-primary bg-clip-text text-transparent">
-              Scientifically Analyzed
+              Educational Resources
             </span>
           </h1>
           
           <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
-            Advanced AI technology meets veterinary science to provide instant health insights, 
-            symptom analysis, and personalized care recommendations for your beloved pets.
+            Discover AI-powered pet health tools and educational resources. Track symptoms, learn about pet care, and get research-based insights. Always consult your veterinarian for medical advice.
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
@@ -45,14 +44,18 @@ const Hero = () => {
             </Button>
           </div>
           
-          <div className="flex items-center justify-center gap-8 pt-8 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center justify-center gap-6 pt-8 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-secondary rounded-full animate-pulse" />
-              <span>50,000+ Pet Parents</span>
+              <span>Used by 50,000+ Pet Parents</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-secondary rounded-full animate-pulse" />
-              <span>1M+ Analyses Run</span>
+              <span>Research-Backed Information</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-secondary rounded-full animate-pulse" />
+              <span>Educational Resources Only</span>
             </div>
           </div>
         </div>
