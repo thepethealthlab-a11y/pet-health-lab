@@ -2,46 +2,58 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Microscope, Activity, FileText, Search, Heart, Stethoscope } from "lucide-react";
+import { AlertTriangle, Apple, Brain, Calculator, Megaphone, Syringe, Heart, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Tools = () => {
   const freeTools = [
     {
-      icon: Activity,
-      title: "Symptom Tracker",
-      description: "Track and monitor your pet's symptoms over time with our educational tracking tool.",
-      link: "/tools/symptom-tracker"
-    },
-    {
-      icon: FileText,
-      title: "Health Journal",
-      description: "Keep a comprehensive health journal for your pet's wellness journey.",
-      link: "/tools/health-journal"
-    },
-    {
-      icon: Search,
-      title: "Symptom Checker",
-      description: "Educational information about common pet symptoms. Not a diagnostic tool.",
+      icon: AlertTriangle,
+      title: "Emergency Symptom Checker",
+      description: "Educational tool to learn about pet symptoms and when to consult your veterinarian",
       link: "/tools/symptom-checker"
     },
     {
+      icon: Apple,
+      title: "Toxic Food Scanner",
+      description: "Learn about potentially harmful foods for pets. Always verify with your vet",
+      link: "/tools/food-scanner"
+    },
+    {
+      icon: Brain,
+      title: "Behavior Problem Solver",
+      description: "Understand pet behavior patterns and get training insights",
+      link: "/tools/behavior-solver"
+    },
+    {
+      icon: Calculator,
+      title: "Pet Cost Calculator",
+      description: "Plan your pet care budget with our cost estimation tool",
+      link: "/tools/cost-calculator"
+    },
+    {
+      icon: Megaphone,
+      title: "Lost Pet Alert Generator",
+      description: "Create instant lost pet posters and alerts",
+      link: "/tools/lost-pet-alert"
+    },
+    {
+      icon: Syringe,
+      title: "Vaccination Scheduler",
+      description: "Track vaccination schedules and get reminders",
+      link: "/tools/vaccination-scheduler"
+    },
+    {
       icon: Heart,
-      title: "Wellness Tips",
-      description: "Research-backed tips for maintaining your pet's overall wellness.",
-      link: "/tools/wellness-tips"
+      title: "First Aid Guide",
+      description: "Educational first aid information for pet emergencies",
+      link: "/tools/first-aid"
     },
     {
-      icon: Stethoscope,
-      title: "Care Guide",
-      description: "Comprehensive guides for different pet breeds and health conditions.",
-      link: "/tools/care-guide"
-    },
-    {
-      icon: Microscope,
-      title: "AI Health Insights",
-      description: "Get educational insights about pet health based on research data.",
-      link: "/tools/ai-insights"
+      icon: Shield,
+      title: "Home Safety Scanner",
+      description: "Check your home for potential pet hazards",
+      link: "/tools/home-safety"
     }
   ];
 
@@ -57,7 +69,9 @@ const Tools = () => {
             </h1>
             <p className="text-xl text-muted-foreground">
               Educational resources and tracking tools for informed pet care decisions.
-              Always consult your veterinarian for medical advice.
+            </p>
+            <p className="text-lg text-muted-foreground font-semibold mt-2">
+              Educational use only - Always consult your veterinarian
             </p>
           </div>
 
@@ -73,7 +87,16 @@ const Tools = () => {
                 </CardHeader>
                 <CardContent>
                   <Button variant="outline" asChild className="w-full">
-                    <Link to={tool.link}>Explore Tool</Link>
+                    <Link to={tool.link}>
+                      {tool.title === "Emergency Symptom Checker" && "Use Educational Tool"}
+                      {tool.title === "Toxic Food Scanner" && "Check Food Safety"}
+                      {tool.title === "Behavior Problem Solver" && "Analyze Behavior"}
+                      {tool.title === "Pet Cost Calculator" && "Calculate Costs"}
+                      {tool.title === "Lost Pet Alert Generator" && "Create Alert"}
+                      {tool.title === "Vaccination Scheduler" && "Set Schedule"}
+                      {tool.title === "First Aid Guide" && "Learn First Aid"}
+                      {tool.title === "Home Safety Scanner" && "Scan Home Safety"}
+                    </Link>
                   </Button>
                 </CardContent>
               </Card>
