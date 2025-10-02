@@ -3,46 +3,52 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Brain, TrendingUp, Calendar, Bell, FileBarChart, Sparkles } from "lucide-react";
+import { Stethoscope, Shield, Activity, Utensils, Plane, Users, Sparkles, Check, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Premium = () => {
   const premiumTools = [
     {
-      icon: Brain,
-      title: "AI Health Analysis",
-      description: "Advanced AI-powered analysis of your pet's health patterns and trends.",
-      badge: "Premium"
+      icon: Stethoscope,
+      title: "24/7 VET CONNECT",
+      freeFeatures: "Basic vet directory",
+      premiumFeatures: "Live chat with vet assistants, emergency service finder",
+      buttonText: "Get Live Help"
     },
     {
-      icon: TrendingUp,
-      title: "Predictive Insights",
-      description: "Data-driven predictions about potential health considerations based on patterns.",
-      badge: "Premium"
+      icon: Shield,
+      title: "INSURANCE COMPARISON PRO",
+      freeFeatures: "Basic insurance information",
+      premiumFeatures: "Real-time insurance comparisons, claim assistance",
+      buttonText: "Compare Plans"
     },
     {
-      icon: Calendar,
-      title: "Smart Reminders",
-      description: "Automated reminders for medications, vet visits, and wellness checkups.",
-      badge: "Premium"
+      icon: Activity,
+      title: "ADVANCED HEALTH MONITOR",
+      freeFeatures: "Basic health tracking",
+      premiumFeatures: "AI-powered health predictions, trend analysis",
+      buttonText: "Get Advanced Insights"
     },
     {
-      icon: Bell,
-      title: "Priority Alerts",
-      description: "Get notified about significant health pattern changes requiring attention.",
-      badge: "Premium"
+      icon: Utensils,
+      title: "SMART FOOD PLANNER",
+      freeFeatures: "7-day basic plans",
+      premiumFeatures: "365-day customized meal plans, allergy management",
+      buttonText: "Get Custom Plans"
     },
     {
-      icon: FileBarChart,
-      title: "Comprehensive Reports",
-      description: "Detailed health reports you can share with your veterinarian.",
-      badge: "Premium"
+      icon: Plane,
+      title: "TRAVEL ASSISTANT",
+      freeFeatures: "Basic travel search",
+      premiumFeatures: "Complete travel planning, documentation help",
+      buttonText: "Plan Travel"
     },
     {
-      icon: Sparkles,
-      title: "Personalized Recommendations",
-      description: "Customized care suggestions based on your pet's unique health profile.",
-      badge: "Premium"
+      icon: Users,
+      title: "MULTI-PET MANAGER",
+      freeFeatures: "Single pet profile",
+      premiumFeatures: "Unlimited pet profiles, family sharing",
+      buttonText: "Manage Multiple Pets"
     }
   ];
 
@@ -74,30 +80,78 @@ const Premium = () => {
                     <div className="p-3 bg-gradient-primary rounded-lg">
                       <tool.icon className="h-8 w-8 text-primary-foreground" />
                     </div>
-                    <Badge variant="secondary">{tool.badge}</Badge>
+                    <Badge variant="secondary">Premium</Badge>
                   </div>
-                  <CardTitle className="text-xl">{tool.title}</CardTitle>
-                  <CardDescription className="text-base">{tool.description}</CardDescription>
+                  <CardTitle className="text-xl mb-6">{tool.title}</CardTitle>
+                  
+                  <div className="space-y-4 mb-6">
+                    <div className="flex gap-3">
+                      <X className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground mb-1">Free:</p>
+                        <p className="text-sm text-muted-foreground">{tool.freeFeatures}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-3">
+                      <Check className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground mb-1">Premium:</p>
+                        <p className="text-sm text-foreground">{tool.premiumFeatures}</p>
+                      </div>
+                    </div>
+                  </div>
                 </CardHeader>
+                <CardContent>
+                  <Button variant="default" className="w-full" asChild>
+                    <Link to="/pricing">{tool.buttonText}</Link>
+                  </Button>
+                </CardContent>
               </Card>
             ))}
           </div>
 
           <div className="text-center bg-gradient-subtle rounded-lg p-12 max-w-4xl mx-auto border border-border">
-            <h2 className="text-3xl font-bold mb-4">Ready to Upgrade?</h2>
-            <p className="text-muted-foreground mb-8 text-lg">
-              Start your 14-day free trial and experience the full power of AI-driven pet health insights.
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary/10 border border-secondary/20 rounded-full text-secondary text-sm font-medium mb-6">
+              ⚡ Limited Time Offer
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Unlock Premium Pet Care Today</h2>
+            <p className="text-muted-foreground mb-4 text-lg max-w-2xl mx-auto">
+              Join 50,000+ pet parents who trust our premium tools for comprehensive pet health management.
             </p>
+            <div className="grid md:grid-cols-3 gap-6 mb-8 text-left max-w-3xl mx-auto">
+              <div className="flex items-start gap-3">
+                <Check className="h-5 w-5 text-secondary flex-shrink-0 mt-1" />
+                <div>
+                  <p className="font-semibold text-foreground">24/7 Access</p>
+                  <p className="text-sm text-muted-foreground">Always available when you need it</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Check className="h-5 w-5 text-secondary flex-shrink-0 mt-1" />
+                <div>
+                  <p className="font-semibold text-foreground">AI-Powered</p>
+                  <p className="text-sm text-muted-foreground">Advanced health predictions</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Check className="h-5 w-5 text-secondary flex-shrink-0 mt-1" />
+                <div>
+                  <p className="font-semibold text-foreground">Expert Support</p>
+                  <p className="text-sm text-muted-foreground">Vet-reviewed resources</p>
+                </div>
+              </div>
+            </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button variant="hero" size="lg" asChild>
-                <Link to="/pricing">View Pricing Plans</Link>
+                <Link to="/pricing">Start Free Trial - 14 Days</Link>
               </Button>
               <Button variant="outline" size="lg" asChild>
-                <Link to="/tools">Try Free Tools First</Link>
+                <Link to="/tools">Explore Free Tools</Link>
               </Button>
             </div>
             <p className="text-sm text-muted-foreground mt-6">
-              No credit card required • Cancel anytime • 14-day money-back guarantee
+              No credit card required • Cancel anytime • 30-day money-back guarantee
             </p>
           </div>
         </div>
