@@ -22,14 +22,18 @@ const Hero = () => {
           </div>
           
           <h1 className="text-5xl md:text-7xl font-bold text-foreground leading-tight">
-            Pet Health Lab - AI Pet Care Tools & 
+            The Pet Health Lab - 
             <span className="block bg-gradient-primary bg-clip-text text-transparent">
-              Educational Resources
+              AI-Powered Pet Care Education
             </span>
           </h1>
           
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
-            Discover AI-powered pet health tools and educational resources. Track symptoms, learn about pet care, and get research-based insights. Always consult your veterinarian for medical advice.
+          <p className="text-2xl md:text-3xl font-semibold text-foreground max-w-3xl mx-auto mb-4">
+            Research-Backed Tools & Educational Resources for Pet Parents
+          </p>
+          
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+            Get AI-powered insights about pet health. Educational tools to help you understand your pet better. Always consult your veterinarian for medical advice.
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
@@ -40,7 +44,7 @@ const Hero = () => {
               </Link>
             </Button>
             <Button variant="outline" size="lg" asChild>
-              <Link to="/pricing">View Pricing</Link>
+              <Link to="/premium">View Premium Features</Link>
             </Button>
           </div>
           

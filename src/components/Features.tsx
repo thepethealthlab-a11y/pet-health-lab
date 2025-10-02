@@ -1,35 +1,35 @@
-import { Brain, Shield, Clock, TrendingUp, Users, Award } from "lucide-react";
+import { AlertTriangle, Apple, Brain, Syringe, Calculator, Heart } from "lucide-react";
 
 const features = [
   {
+    icon: AlertTriangle,
+    title: "AI Symptom Checker",
+    description: "Learn about symptoms and understand when it's time to consult your veterinarian with our educational AI tool.",
+  },
+  {
+    icon: Apple,
+    title: "Toxic Food Scanner",
+    description: "Educational food safety information to help you learn about potentially harmful foods for your pets.",
+  },
+  {
     icon: Brain,
-    title: "AI-Powered Analysis",
-    description: "Advanced machine learning algorithms trained on millions of veterinary records to provide accurate health insights.",
+    title: "Behavior Decoder",
+    description: "Understand pet behavior patterns and get insights into training approaches and behavioral science.",
   },
   {
-    icon: Shield,
-    title: "Veterinary Approved",
-    description: "All our tools and recommendations are reviewed and approved by licensed veterinarians.",
+    icon: Syringe,
+    title: "Vaccination Tracker",
+    description: "Schedule reminders and keep track of your pet's vaccination history and upcoming appointments.",
   },
   {
-    icon: Clock,
-    title: "Instant Results",
-    description: "Get immediate health insights and recommendations without waiting for appointments.",
+    icon: Calculator,
+    title: "Cost Calculator",
+    description: "Budget planning tools to help you estimate and prepare for pet care expenses throughout the year.",
   },
   {
-    icon: TrendingUp,
-    title: "Health Tracking",
-    description: "Monitor your pet's health trends over time with comprehensive tracking and analytics.",
-  },
-  {
-    icon: Users,
-    title: "Community Support",
-    description: "Connect with other pet parents and share experiences in our supportive community.",
-  },
-  {
-    icon: Award,
-    title: "Trusted Platform",
-    description: "Used by thousands of pet parents and recommended by veterinary professionals.",
+    icon: Heart,
+    title: "First Aid Guide",
+    description: "Emergency information and educational resources for common pet first aid situations.",
   },
 ];
 

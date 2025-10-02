@@ -24,6 +24,7 @@ const Footer = () => {
       { name: "Press Kit", href: "/press" },
     ],
     legal: [
+      { name: "Disclaimer", href: "/disclaimer" },
       { name: "Privacy Policy", href: "/privacy" },
       { name: "Terms of Service", href: "/terms" },
       { name: "Cookie Policy", href: "/cookies" },
