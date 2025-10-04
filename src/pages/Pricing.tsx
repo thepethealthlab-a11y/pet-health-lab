@@ -1,9 +1,11 @@
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import Testimonials from "@/components/Testimonials";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Check, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Pricing = () => {
@@ -14,30 +16,30 @@ const Pricing = () => {
       period: "forever",
       description: "Perfect for getting started with basic pet health tracking",
       features: [
-        "Basic symptom tracking",
+        "8 Educational Tools",
+        "Basic Community Access",
+        "Standard Support",
+        "1 Pet Profile",
         "Health journal",
-        "Educational articles",
-        "Community forum access",
-        "Care guides",
-        "Email support"
+        "Educational articles"
       ],
       cta: "Get Started Free",
       popular: false
     },
     {
       name: "Premium",
-      price: "$19",
+      price: "$8.99",
       period: "per month",
       description: "Advanced AI-powered features for comprehensive pet care",
       features: [
-        "Everything in Free",
+        "All 14 Tools Unlimited",
+        "Advanced Features",
+        "Priority Support",
+        "5 Pet Profiles",
         "AI health analysis",
         "Predictive insights",
         "Smart reminders",
-        "Priority alerts",
         "Comprehensive reports",
-        "Personalized recommendations",
-        "Priority support",
         "Ad-free experience"
       ],
       cta: "Start 14-Day Free Trial",
@@ -45,22 +47,34 @@ const Pricing = () => {
     },
     {
       name: "Family",
-      price: "$39",
+      price: "$15.99",
       period: "per month",
       description: "For households with multiple pets",
       features: [
         "Everything in Premium",
-        "Up to 5 pets",
-        "Family sharing",
+        "Unlimited Pet Profiles",
+        "Family Member Sharing",
         "Veterinarian collaboration tools",
         "Advanced analytics",
         "Custom care plans",
-        "Dedicated account manager",
-        "Video consultation credits"
+        "Dedicated account manager"
       ],
       cta: "Start 14-Day Free Trial",
       popular: false
     }
+  ];
+
+  const comparisonFeatures = [
+    { feature: "Educational Tools", free: "8 Tools", premium: "14 Tools", family: "14 Tools" },
+    { feature: "Pet Profiles", free: "1", premium: "5", family: "Unlimited" },
+    { feature: "Community Access", free: true, premium: true, family: true },
+    { feature: "Health Journal", free: true, premium: true, family: true },
+    { feature: "AI Health Analysis", free: false, premium: true, family: true },
+    { feature: "Predictive Insights", free: false, premium: true, family: true },
+    { feature: "Priority Support", free: false, premium: true, family: true },
+    { feature: "Advanced Analytics", free: false, premium: false, family: true },
+    { feature: "Family Sharing", free: false, premium: false, family: true },
+    { feature: "Vet Collaboration", free: false, premium: false, family: true },
   ];
 
   return (
@@ -123,7 +137,59 @@ const Pricing = () => {
             ))}
           </div>
 
-          <div className="max-w-4xl mx-auto space-y-8">
+          <div className="max-w-6xl mx-auto space-y-16">
+            {/* Feature Comparison Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-3xl text-center">Feature Comparison</CardTitle>
+                <CardDescription className="text-center text-base">
+                  Compare all features across our plans to find the perfect fit
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[40%]">Feature</TableHead>
+                        <TableHead className="text-center">Free</TableHead>
+                        <TableHead className="text-center">Premium</TableHead>
+                        <TableHead className="text-center">Family</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {comparisonFeatures.map((row, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{row.feature}</TableCell>
+                          <TableCell className="text-center">
+                            {typeof row.free === 'boolean' ? (
+                              row.free ? <Check className="h-5 w-5 text-primary mx-auto" /> : <X className="h-5 w-5 text-muted-foreground mx-auto" />
+                            ) : (
+                              <span>{row.free}</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {typeof row.premium === 'boolean' ? (
+                              row.premium ? <Check className="h-5 w-5 text-primary mx-auto" /> : <X className="h-5 w-5 text-muted-foreground mx-auto" />
+                            ) : (
+                              <span>{row.premium}</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {typeof row.family === 'boolean' ? (
+                              row.family ? <Check className="h-5 w-5 text-primary mx-auto" /> : <X className="h-5 w-5 text-muted-foreground mx-auto" />
+                            ) : (
+                              <span>{row.family}</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card className="bg-muted/30">
               <CardHeader>
                 <CardTitle className="text-2xl">Frequently Asked Questions</CardTitle>
@@ -160,6 +226,8 @@ const Pricing = () => {
           </div>
         </div>
       </main>
+
+      <Testimonials />
 
       <Footer />
     </div>
