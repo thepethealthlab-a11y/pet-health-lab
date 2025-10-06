@@ -5,12 +5,15 @@ import heroImage from "@/assets/hero-lab.jpg";
 
 const Hero = () => {
   return (
-    <section className="relative min-h-screen flex items-center bg-gradient-subtle overflow-hidden">
+    <section className="relative min-h-screen flex items-center bg-gradient-subtle overflow-hidden" aria-label="Hero section">
       <div className="absolute inset-0 opacity-10">
         <img 
           src={heroImage} 
-          alt="Pet Health Laboratory" 
+          alt="Modern pet health laboratory with advanced AI technology for analyzing pet health and wellness" 
           className="w-full h-full object-cover"
+          loading="eager"
+          width="1920"
+          height="1080"
         />
       </div>
       
