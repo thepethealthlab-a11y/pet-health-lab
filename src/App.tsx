@@ -18,6 +18,7 @@ import Privacy from "./pages/Privacy";
 import Cookies from "./pages/Cookies";
 import GDPR from "./pages/GDPR";
 import SymptomChecker from "./pages/SymptomChecker";
+import ToxicFoodScanner from "./pages/ToxicFoodScanner";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/cookies" element={<Cookies />} />
           <Route path="/gdpr" element={<GDPR />} />
           <Route path="/tools/symptom-checker" element={<SymptomChecker />} />
+          <Route path="/tools/toxic-food-scanner" element={<ToxicFoodScanner />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
