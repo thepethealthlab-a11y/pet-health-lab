@@ -2,7 +2,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle, Apple, Brain, Calculator, Megaphone, Syringe, Heart, Shield } from "lucide-react";
+import { AlertTriangle, Apple, Brain, Calculator, Megaphone, Syringe, Heart, Shield, Utensils } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSEO } from "@/hooks/useSEO";
 
@@ -32,6 +32,12 @@ const Tools = () => {
       title: "Toxic Food Scanner",
       description: "Learn about potentially harmful foods for pets. Always verify with your vet",
       link: "/tools/food-scanner"
+    },
+    {
+      icon: Utensils,
+      title: "Pet Food & Diet Planner",
+      description: "Calculate ideal daily calories, portions, and feeding schedule for your pet",
+      link: "/tools/food-planner"
     },
     {
       icon: Brain,
@@ -106,6 +112,7 @@ const Tools = () => {
                     <Link to={tool.link}>
                       {tool.title === "Emergency Symptom Checker" && "Use Educational Tool"}
                       {tool.title === "Toxic Food Scanner" && "Check Food Safety"}
+                      {tool.title === "Pet Food & Diet Planner" && "Calculate Diet Plan"}
                       {tool.title === "Behavior Problem Solver" && "Analyze Behavior"}
                       {tool.title === "Pet Cost Calculator" && "Calculate Costs"}
                       {tool.title === "Lost Pet Alert Generator" && "Create Alert"}

@@ -19,6 +19,7 @@ import Cookies from "./pages/Cookies";
 import GDPR from "./pages/GDPR";
 import SymptomChecker from "./pages/SymptomChecker";
 import ToxicFoodScanner from "./pages/ToxicFoodScanner";
+import FoodPlanner from "./pages/FoodPlanner";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +47,7 @@ const App = () => (
           <Route path="/gdpr" element={<GDPR />} />
           <Route path="/tools/symptom-checker" element={<SymptomChecker />} />
           <Route path="/tools/toxic-food-scanner" element={<ToxicFoodScanner />} />
+          <Route path="/tools/food-planner" element={<FoodPlanner />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
