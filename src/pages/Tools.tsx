@@ -59,9 +59,9 @@ const Tools = () => {
     },
     {
       icon: Syringe,
-      title: "Vaccination Scheduler",
-      description: "Track vaccination schedules and get reminders",
-      link: "/tools/vaccination-scheduler"
+      title: "Vaccine & Health Reminder",
+      description: "Track vaccination schedules and health checkup reminders",
+      link: "/tools/vaccine-scheduler"
     },
     {
       icon: Heart,
@@ -116,7 +116,7 @@ const Tools = () => {
                       {tool.title === "Behavior Problem Solver" && "Analyze Behavior"}
                       {tool.title === "Pet Cost Calculator" && "Calculate Costs"}
                       {tool.title === "Lost Pet Alert Generator" && "Create Alert"}
-                      {tool.title === "Vaccination Scheduler" && "Set Schedule"}
+                      {tool.title === "Vaccine & Health Reminder" && "Create Schedule"}
                       {tool.title === "First Aid Guide" && "Learn First Aid"}
                       {tool.title === "Home Safety Scanner" && "Scan Home Safety"}
                     </Link>
