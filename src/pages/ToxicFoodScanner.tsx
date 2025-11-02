@@ -1,12 +1,16 @@
 import { useState, useMemo } from "react";
-import { Search, AlertTriangle, Phone, Clock } from "lucide-react";
+import { Search, AlertTriangle, Phone, Clock, Upload, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { useSEO } from "@/hooks/useSEO";
+import { toast } from "@/components/ui/use-toast";
 
 interface ToxicFood {
   name: string;
@@ -369,6 +373,10 @@ const ToxicFoodScanner = () => {
   });
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [ingredientsText, setIngredientsText] = useState("");
+  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [analyzedIngredients, setAnalyzedIngredients] = useState<string[]>([]);
 
   const filteredFoods = useMemo(() => {
     if (!searchQuery.trim()) return [];
@@ -400,6 +408,70 @@ const ToxicFoodScanner = () => {
     }
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please upload an image smaller than 10MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      setUploadedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      toast({
+        title: "Image uploaded",
+        description: "Image uploaded successfully. Note: AI analysis coming soon!",
+      });
+    }
+  };
+
+  const analyzeIngredients = () => {
+    if (!ingredientsText.trim()) {
+      toast({
+        title: "No ingredients",
+        description: "Please enter some ingredients to analyze",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const ingredients = ingredientsText
+      .toLowerCase()
+      .split(/[,\n]/)
+      .map(i => i.trim())
+      .filter(i => i.length > 0);
+    
+    setAnalyzedIngredients(ingredients);
+    toast({
+      title: "Analysis complete",
+      description: `Found ${ingredients.length} ingredients to check`,
+    });
+  };
+
+  const ingredientMatches = useMemo(() => {
+    if (analyzedIngredients.length === 0) return [];
+    
+    return TOXIC_FOODS.filter((food) => {
+      return analyzedIngredients.some(ingredient => {
+        const nameMatch = food.name.toLowerCase().includes(ingredient);
+        const alternativeMatch = food.alternativeNames?.some((alt) =>
+          alt.toLowerCase().includes(ingredient) || ingredient.includes(alt.toLowerCase())
+        );
+        return nameMatch || alternativeMatch;
+      });
+    }).sort((a, b) => {
+      const toxicityOrder = { High: 0, Medium: 1, Low: 2 };
+      return toxicityOrder[a.toxicityLevel] - toxicityOrder[b.toxicityLevel];
+    });
+  }, [analyzedIngredients]);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
@@ -426,22 +498,91 @@ const ToxicFoodScanner = () => {
         <section className="mb-8">
           <Card>
             <CardHeader>
-              <CardTitle>Search for a Food Item</CardTitle>
+              <CardTitle>Check Food Safety</CardTitle>
               <CardDescription>
-                Enter the name of a food to check if it's toxic to your pet
+                Search by name, upload an image, or enter ingredients list
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
-                <Input
-                  type="text"
-                  placeholder="Search for foods (e.g., chocolate, grapes, onions)..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 text-base md:text-lg h-12"
-                />
-              </div>
+              <Tabs defaultValue="search" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="search">
+                    <Search className="h-4 w-4 mr-2" />
+                    Search
+                  </TabsTrigger>
+                  <TabsTrigger value="image">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload Image
+                  </TabsTrigger>
+                  <TabsTrigger value="ingredients">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Ingredients List
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="search" className="space-y-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+                    <Input
+                      type="text"
+                      placeholder="Search for foods (e.g., chocolate, grapes, onions)..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 text-base md:text-lg h-12"
+                    />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="image" className="space-y-4">
+                  <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      id="image-upload"
+                    />
+                    <label htmlFor="image-upload" className="cursor-pointer">
+                      <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Click to upload an image of the food or product label
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Max file size: 10MB
+                      </p>
+                    </label>
+                  </div>
+                  
+                  {imagePreview && (
+                    <div className="space-y-4">
+                      <img 
+                        src={imagePreview} 
+                        alt="Uploaded food" 
+                        className="max-h-64 mx-auto rounded-lg"
+                      />
+                      <Alert>
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertDescription>
+                          <strong>Note:</strong> AI-powered image analysis is coming soon! 
+                          For now, please use the search or ingredients tab to check foods.
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="ingredients" className="space-y-4">
+                  <Textarea
+                    placeholder="Enter ingredients separated by commas or new lines&#10;Example:&#10;chicken, rice, carrots, peas&#10;or&#10;chocolate&#10;grapes&#10;onions"
+                    value={ingredientsText}
+                    onChange={(e) => setIngredientsText(e.target.value)}
+                    className="min-h-32 text-base"
+                  />
+                  <Button onClick={analyzeIngredients} className="w-full">
+                    Analyze Ingredients
+                  </Button>
+                </TabsContent>
+              </Tabs>
 
               {searchQuery && filteredFoods.length === 0 && (
                 <p className="text-center text-muted-foreground mt-6">
@@ -533,7 +674,88 @@ const ToxicFoodScanner = () => {
           </section>
         )}
 
-        {!searchQuery && (
+        {ingredientMatches.length > 0 && (
+          <section className="space-y-4">
+            <h2 className="text-2xl font-semibold mb-4">
+              Ingredient Analysis Results ({ingredientMatches.length} toxic ingredients found)
+            </h2>
+
+            {ingredientMatches.map((food) => (
+              <Card key={food.name} className="overflow-hidden">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <CardTitle className="text-xl md:text-2xl">{food.name}</CardTitle>
+                      {food.alternativeNames && (
+                        <CardDescription className="mt-1">
+                          Also known as: {food.alternativeNames.join(", ")}
+                        </CardDescription>
+                      )}
+                    </div>
+                    <Badge
+                      variant={getToxicityColor(food.toxicityLevel)}
+                      className="text-sm md:text-base px-3 py-1 whitespace-nowrap"
+                    >
+                      {food.toxicityLevel} Risk
+                    </Badge>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-destructive" />
+                      Possible Symptoms
+                    </h3>
+                    <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                      {food.symptoms.map((symptom, index) => (
+                        <li key={index}>{symptom}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="bg-primary/5 rounded-lg p-4">
+                    <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                      <Clock className="h-5 w-5 text-primary" />
+                      Immediate Actions
+                    </h3>
+                    <ol className="list-decimal list-inside space-y-1">
+                      {food.immediateActions.map((action, index) => (
+                        <li key={index} className="text-foreground">{action}</li>
+                      ))}
+                    </ol>
+                  </div>
+
+                  <div className="bg-destructive/10 rounded-lg p-4 border border-destructive/20">
+                    <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                      <Phone className="h-5 w-5 text-destructive" />
+                      Emergency Contacts
+                    </h3>
+                    <ul className="space-y-2">
+                      <li>
+                        <strong>Pet Poison Helpline:</strong>{" "}
+                        <a href="tel:855-764-7661" className="text-primary hover:underline">
+                          855-764-7661
+                        </a>
+                      </li>
+                      <li>
+                        <strong>ASPCA Poison Control:</strong>{" "}
+                        <a href="tel:888-426-4435" className="text-primary hover:underline">
+                          888-426-4435
+                        </a>
+                      </li>
+                      <li>
+                        <strong>Your Veterinarian:</strong> Contact immediately for emergency care
+                      </li>
+                    </ul>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </section>
+        )}
+
+        {!searchQuery && ingredientMatches.length === 0 && (
           <section className="mt-8">
             <Card>
               <CardHeader>
