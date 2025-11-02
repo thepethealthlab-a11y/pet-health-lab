@@ -14,6 +14,8 @@ import { format, addWeeks, addMonths, addYears, differenceInWeeks, differenceInM
 import { cn } from "@/lib/utils";
 import { useSEO } from "@/hooks/useSEO";
 import jsPDF from "jspdf";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface VaccineEvent {
   name: string;
@@ -46,6 +48,7 @@ const VaccineScheduler = () => {
   const [email, setEmail] = useState<string>("");
   const [schedule, setSchedule] = useState<VaccineEvent[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [isEmailSending, setIsEmailSending] = useState(false);
 
   const countries = [
     "United States",
@@ -394,6 +397,40 @@ const VaccineScheduler = () => {
     return `${Math.floor(months / 12)} year${Math.floor(months / 12) > 1 ? "s" : ""} old`;
   };
 
+  const sendEmailSchedule = async () => {
+    if (!email) {
+      toast.error("Please enter your email address");
+      return;
+    }
+
+    setIsEmailSending(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('send-vaccine-schedule', {
+        body: {
+          email,
+          petType,
+          breed,
+          birthDate: birthDate?.toISOString(),
+          country,
+          schedule: schedule.map(event => ({
+            ...event,
+            dueDate: event.dueDate.toISOString(),
+          })),
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success("Schedule sent! Check your email inbox.");
+    } catch (error: any) {
+      console.error("Error sending email:", error);
+      toast.error("Failed to send email. Please try again.");
+    } finally {
+      setIsEmailSending(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -555,9 +592,14 @@ const VaccineScheduler = () => {
                   Download Schedule
                 </Button>
                 {email && (
-                  <Button variant="default" className="flex-1">
+                  <Button 
+                    variant="default" 
+                    className="flex-1"
+                    onClick={sendEmailSchedule}
+                    disabled={isEmailSending}
+                  >
                     <Mail className="mr-2 h-4 w-4" />
-                    Email Me Schedule
+                    {isEmailSending ? "Sending..." : "Email Me Schedule"}
                   </Button>
                 )}
               </div>

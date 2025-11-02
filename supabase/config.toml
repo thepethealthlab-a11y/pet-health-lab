@@ -1,1 +1,4 @@
 project_id = "xjrzgmzuaddpbsacgtjm"
+
+[functions.send-vaccine-schedule]
+verify_jwt = false
