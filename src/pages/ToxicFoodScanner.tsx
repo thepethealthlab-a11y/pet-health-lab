@@ -11,6 +11,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { useSEO } from "@/hooks/useSEO";
 import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ToxicFood {
   name: string;
@@ -377,6 +378,8 @@ const ToxicFoodScanner = () => {
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [analyzedIngredients, setAnalyzedIngredients] = useState<string[]>([]);
+  const [imageAnalysis, setImageAnalysis] = useState<string>("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const filteredFoods = useMemo(() => {
     if (!searchQuery.trim()) return [];
@@ -453,6 +456,45 @@ const ToxicFoodScanner = () => {
       title: "Analysis complete",
       description: `Found ${ingredients.length} ingredients to check`,
     });
+  };
+
+  const analyzeImage = async () => {
+    if (!imagePreview) {
+      toast({
+        title: "No image",
+        description: "Please upload an image first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setImageAnalysis("");
+
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-food-image', {
+        body: { imageData: imagePreview }
+      });
+
+      if (error) throw error;
+
+      if (data?.analysis) {
+        setImageAnalysis(data.analysis);
+        toast({
+          title: "Analysis complete",
+          description: "AI has analyzed the image for toxic ingredients",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error analyzing image:", error);
+      toast({
+        title: "Analysis failed",
+        description: error.message || "Failed to analyze image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const ingredientMatches = useMemo(() => {
@@ -560,13 +602,23 @@ const ToxicFoodScanner = () => {
                         alt="Uploaded food" 
                         className="max-h-64 mx-auto rounded-lg"
                       />
-                      <Alert>
-                        <AlertTriangle className="h-4 w-4" />
-                        <AlertDescription>
-                          <strong>Note:</strong> AI-powered image analysis is coming soon! 
-                          For now, please use the search or ingredients tab to check foods.
-                        </AlertDescription>
-                      </Alert>
+                      <Button 
+                        onClick={analyzeImage} 
+                        disabled={isAnalyzing}
+                        className="w-full"
+                      >
+                        {isAnalyzing ? "Analyzing..." : "Analyze Image with AI"}
+                      </Button>
+                      
+                      {imageAnalysis && (
+                        <Alert>
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertDescription className="whitespace-pre-wrap">
+                            <strong>AI Analysis:</strong>
+                            <div className="mt-2">{imageAnalysis}</div>
+                          </AlertDescription>
+                        </Alert>
+                      )}
                     </div>
                   )}
                 </TabsContent>
