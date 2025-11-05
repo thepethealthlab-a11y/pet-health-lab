@@ -613,9 +613,62 @@ const ToxicFoodScanner = () => {
                       {imageAnalysis && (
                         <Alert>
                           <AlertTriangle className="h-4 w-4" />
-                          <AlertDescription className="whitespace-pre-wrap">
-                            <strong>AI Analysis:</strong>
-                            <div className="mt-2">{imageAnalysis}</div>
+                          <AlertDescription>
+                            <strong>AI Analysis Results:</strong>
+                            <div className="mt-3 space-y-2">
+                              {(() => {
+                                try {
+                                  // Remove markdown code blocks if present
+                                  const cleanJson = imageAnalysis.replace(/```json\n?|\n?```/g, '').trim();
+                                  const results = JSON.parse(cleanJson);
+                                  
+                                  const toxicItems = results.filter((item: any) => item.isToxic);
+                                  const safeItems = results.filter((item: any) => !item.isToxic);
+                                  
+                                  return (
+                                    <>
+                                      {toxicItems.length > 0 && (
+                                        <div className="p-3 bg-destructive/10 rounded-md">
+                                          <p className="font-semibold text-destructive mb-2">⚠️ Toxic Items Detected:</p>
+                                          {toxicItems.map((item: any, idx: number) => (
+                                            <div key={idx} className="ml-4 mb-2">
+                                              <p className="font-medium">{item.ingredient}</p>
+                                              {item.toxicityLevel && (
+                                                <Badge variant="destructive" className="mt-1">
+                                                  {item.toxicityLevel} Toxicity
+                                                </Badge>
+                                              )}
+                                              {item.reason && (
+                                                <p className="text-sm mt-1">{item.reason}</p>
+                                              )}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                      
+                                      {safeItems.length > 0 && (
+                                        <div className="p-3 bg-secondary/50 rounded-md">
+                                          <p className="font-semibold mb-2">✓ Safe Items:</p>
+                                          <ul className="ml-4 list-disc">
+                                            {safeItems.map((item: any, idx: number) => (
+                                              <li key={idx}>{item.ingredient}</li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                      )}
+                                      
+                                      {toxicItems.length === 0 && (
+                                        <p className="text-green-600 font-medium">
+                                          ✓ No toxic ingredients detected in this image!
+                                        </p>
+                                      )}
+                                    </>
+                                  );
+                                } catch (e) {
+                                  return <p className="text-sm">{imageAnalysis}</p>;
+                                }
+                              })()}
+                            </div>
                           </AlertDescription>
                         </Alert>
                       )}
