@@ -1,5 +1,6 @@
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
+import PopularTools from "@/components/PopularTools";
 import Features from "@/components/Features";
 import ToolsPreview from "@/components/ToolsPreview";
 import Testimonials from "@/components/Testimonials";
@@ -33,6 +34,7 @@ const Index = () => {
       <Navigation />
       <main>
         <Hero />
+        <PopularTools />
         <Features />
         <ToolsPreview />
         <Testimonials />
