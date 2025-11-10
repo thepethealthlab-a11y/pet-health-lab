@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          currency: string
+          date: string
+          description: string | null
+          id: string
+          pet_id: string | null
+          receipt_url: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          currency?: string
+          date: string
+          description?: string | null
+          id?: string
+          pet_id?: string | null
+          receipt_url?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          currency?: string
+          date?: string
+          description?: string | null
+          id?: string
+          pet_id?: string | null
+          receipt_url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       forum_categories: {
         Row: {
           created_at: string | null
@@ -119,6 +173,50 @@ export type Database = {
           },
         ]
       }
+      pets: {
+        Row: {
+          birth_date: string | null
+          breed: string | null
+          created_at: string
+          id: string
+          name: string
+          photo_url: string | null
+          type: string
+          user_id: string
+          weight: number | null
+        }
+        Insert: {
+          birth_date?: string | null
+          breed?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          photo_url?: string | null
+          type: string
+          user_id: string
+          weight?: number | null
+        }
+        Update: {
+          birth_date?: string | null
+          breed?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          photo_url?: string | null
+          type?: string
+          user_id?: string
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -139,6 +237,231 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      reminders: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          method: string
+          pet_id: string
+          remind_date: string
+          sent: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          method: string
+          pet_id: string
+          remind_date: string
+          sent?: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          method?: string
+          pet_id?: string
+          remind_date?: string
+          sent?: boolean
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminders_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      symptom_checks: {
+        Row: {
+          ai_response: string
+          created_at: string
+          id: string
+          pet_id: string
+          symptoms: string
+          urgency_level: string
+          user_id: string
+        }
+        Insert: {
+          ai_response: string
+          created_at?: string
+          id?: string
+          pet_id: string
+          symptoms: string
+          urgency_level: string
+          user_id: string
+        }
+        Update: {
+          ai_response?: string
+          created_at?: string
+          id?: string
+          pet_id?: string
+          symptoms?: string
+          urgency_level?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "symptom_checks_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "symptom_checks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usage_tracking: {
+        Row: {
+          count: number
+          created_at: string
+          feature: string
+          id: string
+          month: string
+          user_id: string
+        }
+        Insert: {
+          count?: number
+          created_at?: string
+          feature: string
+          id?: string
+          month: string
+          user_id: string
+        }
+        Update: {
+          count?: number
+          created_at?: string
+          feature?: string
+          id?: string
+          month?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usage_tracking_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          phone_number: string | null
+          sms_enabled: boolean
+          subscription_ends_at: string | null
+          subscription_id: string | null
+          subscription_plan: string | null
+          subscription_status: string
+          whatsapp_enabled: boolean
+          whatsapp_number: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id: string
+          phone_number?: string | null
+          sms_enabled?: boolean
+          subscription_ends_at?: string | null
+          subscription_id?: string | null
+          subscription_plan?: string | null
+          subscription_status?: string
+          whatsapp_enabled?: boolean
+          whatsapp_number?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          phone_number?: string | null
+          sms_enabled?: boolean
+          subscription_ends_at?: string | null
+          subscription_id?: string | null
+          subscription_plan?: string | null
+          subscription_status?: string
+          whatsapp_enabled?: boolean
+          whatsapp_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "users_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vaccines: {
+        Row: {
+          completed_date: string | null
+          created_at: string
+          due_date: string
+          id: string
+          notes: string | null
+          pet_id: string
+          vaccine_name: string
+          vet_clinic: string | null
+        }
+        Insert: {
+          completed_date?: string | null
+          created_at?: string
+          due_date: string
+          id?: string
+          notes?: string | null
+          pet_id: string
+          vaccine_name: string
+          vet_clinic?: string | null
+        }
+        Update: {
+          completed_date?: string | null
+          created_at?: string
+          due_date?: string
+          id?: string
+          notes?: string | null
+          pet_id?: string
+          vaccine_name?: string
+          vet_clinic?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vaccines_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
