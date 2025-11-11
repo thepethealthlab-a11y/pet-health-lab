@@ -1,86 +1,97 @@
-import { Star } from "lucide-react";
+import { Star, Dog, Cat } from "lucide-react";
 
 const testimonials = [
   {
-    name: "Sarah Johnson",
-    role: "Golden Retriever Owner",
-    content: "ThePetHealthLab helped me identify my dog's allergies early. The symptom checker was incredibly accurate, and my vet was impressed with the detailed report!",
+    name: "Sarah M.",
+    role: "Golden Retriever owner",
+    content: "This symptom checker helped me know when to rush my dog to the vet. Potentially saved his life!",
     rating: 5,
-    avatar: "SJ",
+    icon: Dog,
   },
   {
-    name: "Michael Chen",
-    role: "Cat Parent",
-    content: "The vaccination tracker is a lifesaver! I never miss important appointments anymore, and the health monitoring features give me peace of mind.",
+    name: "Mike R.",
+    role: "Cat parent",
+    content: "Finally tracking vaccines is so easy. The reminders are perfect timing.",
     rating: 5,
-    avatar: "MC",
+    icon: Cat,
   },
   {
-    name: "Emily Rodriguez",
-    role: "Multi-Pet Household",
-    content: "Managing health records for three pets was overwhelming until I found this platform. The premium tools are worth every penny!",
+    name: "Jennifer L.",
+    role: "Labrador owner",
+    content: "The toxic food scanner gives me peace of mind every time I feed my curious puppy.",
     rating: 5,
-    avatar: "ER",
-  },
-  {
-    name: "David Thompson",
-    role: "First-Time Dog Owner",
-    content: "As a new pet parent, this platform taught me so much about pet health. The AI recommendations are spot-on and easy to understand.",
-    rating: 5,
-    avatar: "DT",
+    icon: Dog,
   },
 ];
 
 const Testimonials = () => {
   return (
-    <section className="py-24 bg-background" aria-labelledby="testimonials-heading">
+    <section className="py-20 bg-muted/30" aria-labelledby="testimonials-heading">
       <div className="container mx-auto px-4">
-        <header className="text-center max-w-3xl mx-auto mb-16">
-          <h2 id="testimonials-heading" className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-            Trusted by Pet Parents Worldwide
+        <header className="text-center max-w-3xl mx-auto mb-12">
+          <h2 id="testimonials-heading" className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+            Trusted by Pet Parents Like You
           </h2>
-          <p className="text-lg text-muted-foreground">
-            Join thousands of satisfied pet owners who trust ThePetHealthLab for their pet's well-being
-          </p>
         </header>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto" role="list">
-          {testimonials.map((testimonial, index) => (
-            <article
-              key={index}
-              className="p-8 bg-card rounded-xl border border-border hover:border-primary/50 hover:shadow-lg transition-all duration-300 animate-fade-in"
-              style={{ animationDelay: `${index * 100}ms` }}
-              role="listitem"
-              itemScope
-              itemType="https://schema.org/Review"
-            >
-              <div className="flex gap-1 mb-4" itemProp="reviewRating" itemScope itemType="https://schema.org/Rating">
-                <meta itemProp="ratingValue" content={testimonial.rating.toString()} />
-                <meta itemProp="bestRating" content="5" />
-                {[...Array(testimonial.rating)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 fill-secondary text-secondary" aria-label="star rating" />
-                ))}
-              </div>
-              
-              <p className="text-foreground mb-6 text-lg leading-relaxed" itemProp="reviewBody">
-                "{testimonial.content}"
-              </p>
-              
-              <div className="flex items-center gap-3" itemProp="author" itemScope itemType="https://schema.org/Person">
-                <div className="w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-semibold" aria-label={`${testimonial.name} avatar`}>
-                  {testimonial.avatar}
+        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-12" role="list">
+          {testimonials.map((testimonial, index) => {
+            const Icon = testimonial.icon;
+            return (
+              <article
+                key={index}
+                className="p-6 bg-card rounded-lg border border-border transition-all duration-300 animate-fade-in flex flex-col"
+                style={{ animationDelay: `${index * 100}ms` }}
+                role="listitem"
+                itemScope
+                itemType="https://schema.org/Review"
+              >
+                <div className="flex gap-1 mb-4" itemProp="reviewRating" itemScope itemType="https://schema.org/Rating">
+                  <meta itemProp="ratingValue" content={testimonial.rating.toString()} />
+                  <meta itemProp="bestRating" content="5" />
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-primary text-primary" aria-label="star rating" />
+                  ))}
                 </div>
-                <div>
-                  <div className="font-semibold text-foreground" itemProp="name">
-                    {testimonial.name}
+                
+                <p className="text-foreground mb-6 leading-relaxed flex-grow" itemProp="reviewBody">
+                  "{testimonial.content}"
+                </p>
+                
+                <div className="flex items-center gap-3 mt-auto" itemProp="author" itemScope itemType="https://schema.org/Person">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center" aria-label={`${testimonial.name} avatar`}>
+                    <Icon className="h-5 w-5 text-primary" />
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    {testimonial.role}
+                  <div>
+                    <div className="font-semibold text-foreground" itemProp="name">
+                      {testimonial.name}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {testimonial.role}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8 text-sm md:text-base text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-foreground">50,000+</span>
+            <span>Symptom Checks</span>
+          </div>
+          <span className="hidden md:inline">|</span>
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-foreground">10,000+</span>
+            <span>Active Users</span>
+          </div>
+          <span className="hidden md:inline">|</span>
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-foreground">4.8</span>
+            <Star className="h-4 w-4 fill-primary text-primary inline" />
+            <span>Rating</span>
+          </div>
         </div>
       </div>
     </section>
