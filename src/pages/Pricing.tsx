@@ -1,11 +1,9 @@
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import Testimonials from "@/components/Testimonials";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Check, X } from "lucide-react";
+import { Check } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Pricing = () => {
@@ -16,12 +14,19 @@ const Pricing = () => {
       period: "forever",
       description: "Perfect for getting started with basic pet health tracking",
       features: [
-        "8 Educational Tools",
-        "Basic Community Access",
-        "Standard Support",
+        "7 Educational Tools",
+        "Symptom Guide (3 checks/month)",
+        "Toxic Food Scanner (unlimited)",
+        "Calorie Calculator (1 pet)",
+        "Vaccine Tracker (email reminders)",
+        "Expense Tracker (basic)",
+        "Lost Pet Generator",
+        "Vet Finder",
         "1 Pet Profile",
-        "Health journal",
-        "Educational articles"
+        "Health Journal",
+        "Educational Articles",
+        "Basic Community Access",
+        "Standard Support"
       ],
       cta: "Get Started Free",
       popular: false
@@ -30,17 +35,21 @@ const Pricing = () => {
       name: "Premium",
       price: "$8.99",
       period: "per month",
+      yearlyNote: "or $89/year",
       description: "Advanced AI-powered features for comprehensive pet care",
       features: [
-        "All 14 Tools Unlimited",
-        "Advanced Features",
-        "Priority Support",
+        "All 10 Tools Unlimited",
+        "Unlimited Symptom Checks",
+        "Advanced Features in all tools",
+        "Priority Support (24hr response)",
         "5 Pet Profiles",
-        "AI health analysis",
-        "Predictive insights",
-        "Smart reminders",
-        "Comprehensive reports",
-        "Ad-free experience"
+        "AI Health Analysis",
+        "Predictive Insights",
+        "Smart Reminders (SMS + Email)",
+        "Comprehensive Reports (PDF export)",
+        "Receipt Scanning (OCR)",
+        "Budget Alerts & Trends",
+        "Ad-free Experience"
       ],
       cta: "Start 14-Day Free Trial",
       popular: true
@@ -53,28 +62,43 @@ const Pricing = () => {
       features: [
         "Everything in Premium",
         "Unlimited Pet Profiles",
-        "Family Member Sharing",
-        "Veterinarian collaboration tools",
-        "Advanced analytics",
-        "Custom care plans",
-        "Dedicated account manager"
+        "Family Member Sharing (up to 5 members)",
+        "Veterinarian Collaboration Tools",
+        "Advanced Analytics Dashboard",
+        "Custom Care Plans",
+        "Dedicated Account Manager",
+        "Priority Feature Requests"
       ],
       cta: "Start 14-Day Free Trial",
       popular: false
     }
   ];
 
-  const comparisonFeatures = [
-    { feature: "Educational Tools", free: "8 Tools", premium: "14 Tools", family: "14 Tools" },
-    { feature: "Pet Profiles", free: "1", premium: "5", family: "Unlimited" },
-    { feature: "Community Access", free: true, premium: true, family: true },
-    { feature: "Health Journal", free: true, premium: true, family: true },
-    { feature: "AI Health Analysis", free: false, premium: true, family: true },
-    { feature: "Predictive Insights", free: false, premium: true, family: true },
-    { feature: "Priority Support", free: false, premium: true, family: true },
-    { feature: "Advanced Analytics", free: false, premium: false, family: true },
-    { feature: "Family Sharing", free: false, premium: false, family: true },
-    { feature: "Vet Collaboration", free: false, premium: false, family: true },
+  const faqs = [
+    {
+      question: "Can I cancel anytime?",
+      answer: "Yes, cancel anytime with no questions asked. Your data stays accessible."
+    },
+    {
+      question: "What payment methods do you accept?",
+      answer: "We accept all major credit cards, PayPal, and Apple Pay via Lemon Squeezy."
+    },
+    {
+      question: "Is there a free trial?",
+      answer: "Yes! Premium and Family plans include a 14-day free trial. No credit card required."
+    },
+    {
+      question: "What if I have more than 5 pets?",
+      answer: "Contact us for a custom enterprise plan tailored to your needs."
+    },
+    {
+      question: "Can I switch plans?",
+      answer: "Yes, upgrade or downgrade anytime. Changes take effect immediately."
+    },
+    {
+      question: "Do you offer refunds?",
+      answer: "Yes, 14-day money-back guarantee on all paid plans, no questions asked."
+    }
   ];
 
   return (
@@ -112,6 +136,9 @@ const Pricing = () => {
                   <div className="mb-4">
                     <span className="text-5xl font-bold">{plan.price}</span>
                     <span className="text-muted-foreground ml-2">/ {plan.period}</span>
+                    {plan.yearlyNote && (
+                      <div className="text-sm text-muted-foreground mt-1">{plan.yearlyNote}</div>
+                    )}
                   </div>
                   <CardDescription className="text-base">{plan.description}</CardDescription>
                 </CardHeader>
@@ -125,7 +152,7 @@ const Pricing = () => {
                     ))}
                   </ul>
                   <Button 
-                    variant={plan.popular ? "hero" : "outline"} 
+                    variant={plan.name === "Free" ? "outline" : "default"} 
                     className="w-full" 
                     size="lg"
                     asChild
@@ -137,97 +164,32 @@ const Pricing = () => {
             ))}
           </div>
 
-          <div className="max-w-6xl mx-auto space-y-16">
-            {/* Feature Comparison Table */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-3xl text-center">Feature Comparison</CardTitle>
-                <CardDescription className="text-center text-base">
-                  Compare all features across our plans to find the perfect fit
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[40%]">Feature</TableHead>
-                        <TableHead className="text-center">Free</TableHead>
-                        <TableHead className="text-center">Premium</TableHead>
-                        <TableHead className="text-center">Family</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {comparisonFeatures.map((row, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">{row.feature}</TableCell>
-                          <TableCell className="text-center">
-                            {typeof row.free === 'boolean' ? (
-                              row.free ? <Check className="h-5 w-5 text-primary mx-auto" /> : <X className="h-5 w-5 text-muted-foreground mx-auto" />
-                            ) : (
-                              <span>{row.free}</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {typeof row.premium === 'boolean' ? (
-                              row.premium ? <Check className="h-5 w-5 text-primary mx-auto" /> : <X className="h-5 w-5 text-muted-foreground mx-auto" />
-                            ) : (
-                              <span>{row.premium}</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {typeof row.family === 'boolean' ? (
-                              row.family ? <Check className="h-5 w-5 text-primary mx-auto" /> : <X className="h-5 w-5 text-muted-foreground mx-auto" />
-                            ) : (
-                              <span>{row.family}</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-
+          <div className="max-w-5xl mx-auto space-y-16">
+            {/* FAQ Section */}
             <Card className="bg-muted/30">
               <CardHeader>
                 <CardTitle className="text-2xl">Frequently Asked Questions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div>
-                  <h3 className="font-semibold mb-2">Can I change plans anytime?</h3>
-                  <p className="text-muted-foreground">Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately.</p>
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-2">What payment methods do you accept?</h3>
-                  <p className="text-muted-foreground">We accept all major credit cards, PayPal, and Apple Pay.</p>
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-2">Is there a long-term contract?</h3>
-                  <p className="text-muted-foreground">No, all plans are month-to-month. Cancel anytime with no penalties.</p>
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-2">Are these tools a replacement for veterinary care?</h3>
-                  <p className="text-muted-foreground">No, our tools provide educational information only. Always consult your veterinarian for medical diagnosis and treatment.</p>
-                </div>
+                {faqs.map((faq, index) => (
+                  <div key={index}>
+                    <h3 className="font-semibold mb-2">{faq.question}</h3>
+                    <p className="text-muted-foreground">{faq.answer}</p>
+                  </div>
+                ))}
               </CardContent>
             </Card>
 
-            <div className="text-center bg-gradient-subtle rounded-lg p-12 border border-border">
-              <h2 className="text-3xl font-bold mb-4">Still Have Questions?</h2>
-              <p className="text-muted-foreground mb-8 text-lg">
-                Our team is here to help you choose the right plan for your needs.
-              </p>
-              <Button variant="outline" size="lg">
-                Contact Support
+            {/* Ready to Upgrade Banner */}
+            <div className="text-center bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl p-12 border border-primary/20">
+              <h2 className="text-3xl font-bold mb-4 text-foreground">Ready to Upgrade?</h2>
+              <Button size="lg" asChild className="hover-scale">
+                <Link to="/pricing">See Pricing Plans</Link>
               </Button>
             </div>
           </div>
         </div>
       </main>
-
-      <Testimonials />
 
       <Footer />
     </div>
