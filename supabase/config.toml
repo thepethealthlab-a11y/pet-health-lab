@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.analyze-pet-behavior]
 verify_jwt = false
+
+[functions.analyze-symptom]
+verify_jwt = false

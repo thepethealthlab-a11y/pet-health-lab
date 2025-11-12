@@ -1,207 +1,159 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle, Phone, History, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { 
+  AlertTriangle, 
+  AlertCircle, 
+  ChevronDown, 
+  ChevronUp, 
+  Loader2,
+  MapPin,
+  Save,
+  RefreshCw,
+  Lock,
+  Sparkles
+} from "lucide-react";
 import { useSEO } from "@/hooks/useSEO";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Link } from "react-router-dom";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-interface Symptom {
-  id: string;
-  label: string;
+interface AnalysisResult {
+  urgency: "HIGH" | "MEDIUM" | "LOW";
+  urgencyMessage: string;
+  possibleCauses: string[];
+  generalInfo: string;
+  warningSignsImmediate: string[];
+  homeMonitoringTips: string[];
 }
-
-interface Condition {
-  name: string;
-  symptoms: string[];
-  urgency: "Low" | "Medium" | "High";
-  description: string;
-}
-
-interface SavedCheck {
-  id: string;
-  date: string;
-  petType: string;
-  age: string;
-  symptoms: string[];
-  results: Condition[];
-}
-
-const SYMPTOMS: Symptom[] = [
-  { id: "vomiting", label: "Vomiting" },
-  { id: "diarrhea", label: "Diarrhea" },
-  { id: "lethargy", label: "Lethargy/Weakness" },
-  { id: "loss_appetite", label: "Loss of Appetite" },
-  { id: "coughing", label: "Coughing" },
-  { id: "itching", label: "Excessive Itching/Scratching" },
-  { id: "limping", label: "Limping/Difficulty Walking" },
-];
-
-const CONDITIONS: Condition[] = [
-  {
-    name: "Gastroenteritis",
-    symptoms: ["vomiting", "diarrhea", "loss_appetite"],
-    urgency: "Medium",
-    description: "Inflammation of the digestive tract. May be caused by dietary indiscretion, infections, or other factors.",
-  },
-  {
-    name: "Severe Dehydration Risk",
-    symptoms: ["vomiting", "diarrhea", "lethargy"],
-    urgency: "High",
-    description: "Multiple symptoms indicating potential dehydration. Immediate veterinary attention recommended.",
-  },
-  {
-    name: "Respiratory Infection",
-    symptoms: ["coughing", "lethargy", "loss_appetite"],
-    urgency: "Medium",
-    description: "Possible upper or lower respiratory infection. Common in pets but requires veterinary evaluation.",
-  },
-  {
-    name: "Allergic Reaction",
-    symptoms: ["itching", "vomiting"],
-    urgency: "Medium",
-    description: "Possible allergic reaction to food, environment, or contact allergens.",
-  },
-  {
-    name: "Skin Allergy/Parasites",
-    symptoms: ["itching"],
-    urgency: "Low",
-    description: "May indicate fleas, mites, allergies, or skin infections. Schedule a vet visit for proper diagnosis.",
-  },
-  {
-    name: "Musculoskeletal Injury",
-    symptoms: ["limping", "lethargy"],
-    urgency: "Medium",
-    description: "Possible strain, sprain, or more serious orthopedic issue. Veterinary examination recommended.",
-  },
-  {
-    name: "Poisoning/Toxicity",
-    symptoms: ["vomiting", "diarrhea", "lethargy", "loss_appetite"],
-    urgency: "High",
-    description: "Multiple severe symptoms may indicate poisoning. Seek emergency veterinary care immediately.",
-  },
-  {
-    name: "General Illness",
-    symptoms: ["lethargy", "loss_appetite"],
-    urgency: "Medium",
-    description: "Non-specific symptoms that warrant veterinary attention to rule out underlying conditions.",
-  },
-];
 
 const SymptomChecker = () => {
   useSEO({
-    title: "Emergency Symptom Checker - Educational Pet Health Tool | ThePetHealthLab",
-    description: "Educational symptom checker to learn about pet symptoms and when to consult your veterinarian. Check common symptoms in dogs and cats.",
-    keywords: "pet symptoms, dog symptoms, cat symptoms, pet health checker, veterinary guidance",
+    title: "Pet Symptom Information Guide - Educational Tool | ThePetHealthLab",
+    description: "Educational tool to learn about pet symptoms and when to consult your veterinarian. Get information about common symptoms in dogs and cats.",
+    keywords: "pet symptoms, dog symptoms, cat symptoms, pet health information, veterinary guidance",
     canonical: "https://thepethealthlab.com/tools/symptom-checker",
-    schema: {
-      "@context": "https://schema.org",
-      "@type": "MedicalWebPage",
-      "name": "Pet Symptom Checker",
-      "description": "Educational tool for understanding pet symptoms",
-      "url": "https://thepethealthlab.com/tools/symptom-checker",
-    },
   });
 
   const [petType, setPetType] = useState<string>("");
+  const [symptoms, setSymptoms] = useState<string>("");
+  const [showAdditional, setShowAdditional] = useState(false);
   const [age, setAge] = useState<string>("");
-  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
-  const [results, setResults] = useState<Condition[]>([]);
-  const [showResults, setShowResults] = useState(false);
-  const [savedChecks, setSavedChecks] = useState<SavedCheck[]>([]);
-  const [showHistory, setShowHistory] = useState(false);
+  const [breed, setBreed] = useState<string>("");
+  const [duration, setDuration] = useState<string>("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [results, setResults] = useState<AnalysisResult | null>(null);
+  const [checksUsed, setChecksUsed] = useState(0);
+  const maxFreeChecks = 3;
 
-  useEffect(() => {
-    const stored = localStorage.getItem("symptomChecks");
-    if (stored) {
-      setSavedChecks(JSON.parse(stored));
-    }
-  }, []);
+  const characterCount = symptoms.length;
+  const maxCharacters = 500;
 
-  const handleSymptomToggle = (symptomId: string) => {
-    setSelectedSymptoms((prev) =>
-      prev.includes(symptomId)
-        ? prev.filter((s) => s !== symptomId)
-        : [...prev, symptomId]
-    );
-  };
-
-  const analyzeSymptoms = () => {
-    if (!petType || !age || selectedSymptoms.length === 0) {
+  const handleAnalyze = async () => {
+    if (!petType || !symptoms.trim()) {
+      toast.error("Please select a pet type and describe the symptoms");
       return;
     }
 
-    const matchedConditions = CONDITIONS.filter((condition) =>
-      condition.symptoms.some((symptom) => selectedSymptoms.includes(symptom))
-    )
-      .map((condition) => ({
-        ...condition,
-        matchCount: condition.symptoms.filter((symptom) =>
-          selectedSymptoms.includes(symptom)
-        ).length,
-      }))
-      .sort((a, b) => b.matchCount - a.matchCount)
-      .slice(0, 3);
+    if (checksUsed >= maxFreeChecks) {
+      toast.error("You've reached your free check limit. Upgrade to Premium for unlimited checks.");
+      return;
+    }
 
-    setResults(matchedConditions);
-    setShowResults(true);
+    setIsAnalyzing(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke("analyze-symptom", {
+        body: {
+          petType,
+          symptoms,
+          age: age || undefined,
+          breed: breed || undefined,
+          duration: duration || undefined,
+        },
+      });
 
-    // Save to local storage
-    const newCheck: SavedCheck = {
-      id: Date.now().toString(),
-      date: new Date().toISOString(),
-      petType,
-      age,
-      symptoms: selectedSymptoms,
-      results: matchedConditions,
-    };
+      if (error) {
+        console.error("Function error:", error);
+        if (error.message?.includes("429") || error.message?.includes("rate limit")) {
+          toast.error("Too many requests. Please try again in a moment.");
+        } else if (error.message?.includes("402") || error.message?.includes("payment")) {
+          toast.error("Service temporarily unavailable. Please contact support.");
+        } else {
+          toast.error("Failed to analyze symptoms. Please try again.");
+        }
+        return;
+      }
 
-    const updatedChecks = [newCheck, ...savedChecks].slice(0, 10);
-    setSavedChecks(updatedChecks);
-    localStorage.setItem("symptomChecks", JSON.stringify(updatedChecks));
+      setResults(data);
+      setChecksUsed(prev => prev + 1);
+      toast.success("Analysis complete!");
+      
+      // Scroll to results
+      setTimeout(() => {
+        document.getElementById("results-section")?.scrollIntoView({ 
+          behavior: "smooth", 
+          block: "start" 
+        });
+      }, 100);
+
+    } catch (error) {
+      console.error("Error analyzing symptoms:", error);
+      toast.error("An error occurred. Please try again.");
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
-  const resetForm = () => {
+  const handleReset = () => {
     setPetType("");
+    setSymptoms("");
     setAge("");
-    setSelectedSymptoms([]);
-    setResults([]);
-    setShowResults(false);
-  };
-
-  const deleteCheck = (id: string) => {
-    const updatedChecks = savedChecks.filter((check) => check.id !== id);
-    setSavedChecks(updatedChecks);
-    localStorage.setItem("symptomChecks", JSON.stringify(updatedChecks));
+    setBreed("");
+    setDuration("");
+    setShowAdditional(false);
+    setResults(null);
   };
 
   const getUrgencyColor = (urgency: string) => {
     switch (urgency) {
-      case "High":
-        return "text-destructive";
-      case "Medium":
-        return "text-orange-600 dark:text-orange-400";
-      case "Low":
-        return "text-secondary";
+      case "HIGH":
+        return "bg-red-500 text-white";
+      case "MEDIUM":
+        return "bg-amber-500 text-white";
+      case "LOW":
+        return "bg-green-500 text-white";
       default:
-        return "text-muted-foreground";
+        return "bg-muted";
     }
   };
 
-  const getUrgencyBg = (urgency: string) => {
+  const getUrgencyIcon = (urgency: string) => {
     switch (urgency) {
-      case "High":
-        return "bg-destructive/10 border-destructive";
-      case "Medium":
-        return "bg-orange-50 dark:bg-orange-900/20 border-orange-300 dark:border-orange-700";
-      case "Low":
-        return "bg-secondary/10 border-secondary";
+      case "HIGH":
+        return "🔴";
+      case "MEDIUM":
+        return "🟡";
+      case "LOW":
+        return "🟢";
       default:
-        return "bg-muted";
+        return "";
     }
   };
 
@@ -211,266 +163,305 @@ const SymptomChecker = () => {
 
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-4xl">
-          <header className="text-center mb-12 animate-fade-in">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              Pet Symptom Checker
+          <header className="text-center mb-8 space-y-4 animate-fade-in">
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground">
+              Pet Symptom Information Guide
             </h1>
-            <p className="text-xl text-muted-foreground mb-2">
-              Educational tool to understand common pet symptoms
+            <p className="text-xl text-muted-foreground">
+              Educational tool to learn about pet symptoms. Always consult your veterinarian for medical advice.
             </p>
-            <Alert className="mt-4 border-primary bg-primary/5">
-              <AlertTriangle className="h-4 w-4 text-primary" />
-              <AlertDescription className="text-sm">
-                <strong>Educational Use Only:</strong> This tool provides general
-                information and does not replace professional veterinary advice.
-                Always consult your veterinarian for accurate diagnosis and treatment.
+            
+            <Alert className="bg-amber-50 dark:bg-amber-950/30 border-2 border-amber-400 dark:border-amber-600">
+              <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              <AlertDescription className="text-amber-900 dark:text-amber-200 font-medium">
+                <strong>⚠️ EDUCATIONAL INFORMATION ONLY</strong> - We are NOT veterinarians. This tool provides general information. Always consult a licensed veterinarian for diagnosis and treatment.
               </AlertDescription>
             </Alert>
           </header>
 
-          {!showResults ? (
-            <section className="space-y-6 animate-fade-in" aria-label="Symptom checker form">
+          {!results ? (
+            <section className="space-y-6 animate-fade-in">
               <Card>
                 <CardHeader>
-                  <CardTitle>Pet Information</CardTitle>
-                  <CardDescription>
-                    Tell us about your pet to get started
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="petType">Pet Type</Label>
-                      <div className="flex gap-4">
-                        <Button
-                          type="button"
-                          variant={petType === "dog" ? "default" : "outline"}
-                          onClick={() => setPetType("dog")}
-                          className="flex-1"
-                        >
-                          Dog
-                        </Button>
-                        <Button
-                          type="button"
-                          variant={petType === "cat" ? "default" : "outline"}
-                          onClick={() => setPetType("cat")}
-                          className="flex-1"
-                        >
-                          Cat
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="age">Age (years)</Label>
-                      <Input
-                        id="age"
-                        type="number"
-                        min="0"
-                        max="30"
-                        placeholder="Enter age"
-                        value={age}
-                        onChange={(e) => setAge(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Select Symptoms</CardTitle>
-                  <CardDescription>
-                    Check all symptoms your pet is experiencing
-                  </CardDescription>
+                  <CardTitle className="flex items-center gap-2">
+                    <span className="text-2xl">1️⃣</span> Pet Type
+                  </CardTitle>
+                  <CardDescription>Select your pet type</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {SYMPTOMS.map((symptom) => (
-                      <div key={symptom.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={symptom.id}
-                          checked={selectedSymptoms.includes(symptom.id)}
-                          onCheckedChange={() => handleSymptomToggle(symptom.id)}
-                        />
-                        <Label
-                          htmlFor={symptom.id}
-                          className="text-base cursor-pointer"
-                        >
-                          {symptom.label}
+                  <RadioGroup value={petType} onValueChange={setPetType}>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <div className="flex items-center space-x-2 flex-1">
+                        <RadioGroupItem value="dog" id="dog" />
+                        <Label htmlFor="dog" className="cursor-pointer text-base flex-1 p-3 border rounded-lg hover:bg-muted/50">
+                          🐕 Dog
                         </Label>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <div className="flex gap-4">
-                <Button
-                  onClick={analyzeSymptoms}
-                  disabled={!petType || !age || selectedSymptoms.length === 0}
-                  className="flex-1"
-                  size="lg"
-                >
-                  Analyze Symptoms
-                </Button>
-                <Button
-                  onClick={() => setShowHistory(!showHistory)}
-                  variant="outline"
-                  size="lg"
-                >
-                  <History className="h-4 w-4 mr-2" />
-                  History
-                </Button>
-              </div>
-
-              {showHistory && savedChecks.length > 0 && (
-                <Card className="animate-fade-in">
-                  <CardHeader>
-                    <CardTitle>Recent Checks</CardTitle>
-                    <CardDescription>
-                      Your last {savedChecks.length} symptom checks
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {savedChecks.map((check) => (
-                      <div
-                        key={check.id}
-                        className="flex items-start justify-between p-3 bg-muted/30 rounded-lg"
-                      >
-                        <div className="flex-1">
-                          <p className="font-medium">
-                            {check.petType.charAt(0).toUpperCase() +
-                              check.petType.slice(1)}{" "}
-                            - {check.age} years old
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(check.date).toLocaleDateString()} at{" "}
-                            {new Date(check.date).toLocaleTimeString()}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Symptoms: {check.symptoms.length}
-                          </p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteCheck(check.id)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                      <div className="flex items-center space-x-2 flex-1">
+                        <RadioGroupItem value="cat" id="cat" />
+                        <Label htmlFor="cat" className="cursor-pointer text-base flex-1 p-3 border rounded-lg hover:bg-muted/50">
+                          🐈 Cat
+                        </Label>
                       </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              )}
-            </section>
-          ) : (
-            <section className="space-y-6 animate-fade-in" aria-label="Analysis results">
-              <Card className="border-destructive bg-destructive/5">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-destructive">
-                    <AlertTriangle className="h-5 w-5" />
-                    Important Notice
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-base">
-                    <strong>Consult your veterinarian immediately</strong> if your
-                    pet is showing any concerning symptoms. This tool is for
-                    educational purposes only and cannot diagnose medical conditions.
-                  </p>
-                  <div className="bg-background p-4 rounded-lg space-y-2">
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <Phone className="h-4 w-4" />
-                      Emergency Veterinary Contacts
-                    </h3>
-                    <ul className="space-y-1 text-sm">
-                      <li>
-                        • <strong>Pet Poison Helpline:</strong> (855) 764-7661
-                      </li>
-                      <li>
-                        • <strong>ASPCA Animal Poison Control:</strong> (888)
-                        426-4435
-                      </li>
-                      <li>
-                        • <strong>Local Emergency Vet:</strong> Search "emergency
-                        vet near me"
-                      </li>
-                    </ul>
-                  </div>
+                      <div className="flex items-center space-x-2 flex-1">
+                        <RadioGroupItem value="other" id="other" />
+                        <Label htmlFor="other" className="cursor-pointer text-base flex-1 p-3 border rounded-lg hover:bg-muted/50">
+                          🐾 Other
+                        </Label>
+                      </div>
+                    </div>
+                  </RadioGroup>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Analysis Results</CardTitle>
-                  <CardDescription>
-                    Based on the symptoms you selected, here are possible
-                    conditions to discuss with your veterinarian
-                  </CardDescription>
+                  <CardTitle className="flex items-center gap-2">
+                    <span className="text-2xl">2️⃣</span> Symptom Description
+                  </CardTitle>
+                  <CardDescription>Describe what's happening with your pet</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="bg-muted/30 p-4 rounded-lg">
-                    <p className="text-sm">
-                      <strong>Pet:</strong> {petType.charAt(0).toUpperCase() +
-                        petType.slice(1)}
-                    </p>
-                    <p className="text-sm">
-                      <strong>Age:</strong> {age} years old
-                    </p>
-                    <p className="text-sm">
-                      <strong>Symptoms:</strong>{" "}
-                      {selectedSymptoms
-                        .map((s) => SYMPTOMS.find((sym) => sym.id === s)?.label)
-                        .join(", ")}
-                    </p>
-                  </div>
+                <CardContent className="space-y-3">
+                  <Textarea
+                    placeholder="Describe what's happening with your pet...
 
-                  {results.length > 0 ? (
-                    <div className="space-y-4">
-                      {results.map((condition, index) => (
-                        <article
-                          key={index}
-                          className={`p-4 rounded-lg border-2 ${getUrgencyBg(
-                            condition.urgency
-                          )}`}
-                        >
-                          <div className="flex items-start justify-between mb-2">
-                            <h3 className="font-semibold text-lg">
-                              {condition.name}
-                            </h3>
-                            <span
-                              className={`text-sm font-semibold px-3 py-1 rounded-full ${getUrgencyColor(
-                                condition.urgency
-                              )}`}
-                            >
-                              {condition.urgency} Urgency
-                            </span>
-                          </div>
-                          <p className="text-sm text-foreground/90">
-                            {condition.description}
-                          </p>
-                        </article>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-center text-muted-foreground">
-                      No specific conditions matched. Please consult your
-                      veterinarian for proper evaluation.
-                    </p>
-                  )}
+Example: 'My dog has been vomiting since yesterday, seems lethargic, and won't eat his food'"
+                    value={symptoms}
+                    onChange={(e) => {
+                      if (e.target.value.length <= maxCharacters) {
+                        setSymptoms(e.target.value);
+                      }
+                    }}
+                    rows={6}
+                    className="resize-none"
+                  />
+                  <div className="flex justify-between items-center text-sm">
+                    <span className={characterCount > maxCharacters * 0.9 ? "text-amber-600" : "text-muted-foreground"}>
+                      {characterCount}/{maxCharacters} characters
+                    </span>
+                  </div>
                 </CardContent>
               </Card>
 
-              <div className="flex gap-4">
-                <Button onClick={resetForm} variant="outline" className="flex-1">
-                  Check Again
+              <Card>
+                <CardHeader className="cursor-pointer" onClick={() => setShowAdditional(!showAdditional)}>
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">3️⃣</span> Additional Details (Optional)
+                    </div>
+                    {showAdditional ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                  </CardTitle>
+                  <CardDescription>Add more details for better information</CardDescription>
+                </CardHeader>
+                {showAdditional && (
+                  <CardContent className="space-y-4 animate-fade-in">
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="age">Age</Label>
+                        <Select value={age} onValueChange={setAge}>
+                          <SelectTrigger id="age">
+                            <SelectValue placeholder="Select age" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="puppy-kitten">Puppy/Kitten (0-1 year)</SelectItem>
+                            <SelectItem value="young">Young Adult (1-3 years)</SelectItem>
+                            <SelectItem value="adult">Adult (3-7 years)</SelectItem>
+                            <SelectItem value="senior">Senior (7+ years)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="duration">Duration</Label>
+                        <Select value={duration} onValueChange={setDuration}>
+                          <SelectTrigger id="duration">
+                            <SelectValue placeholder="Select duration" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="less-24h">Less than 24 hours</SelectItem>
+                            <SelectItem value="1-3-days">1-3 days</SelectItem>
+                            <SelectItem value="more-3-days">More than 3 days</SelectItem>
+                            <SelectItem value="weeks">Weeks</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="breed">Breed (optional)</Label>
+                      <Input
+                        id="breed"
+                        placeholder="e.g., Golden Retriever, Persian Cat"
+                        value={breed}
+                        onChange={(e) => setBreed(e.target.value)}
+                      />
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+
+              <div className="space-y-4">
+                <Button
+                  onClick={handleAnalyze}
+                  disabled={!petType || !symptoms.trim() || isAnalyzing || checksUsed >= maxFreeChecks}
+                  className="w-full"
+                  size="lg"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                      Analyzing Symptoms...
+                    </>
+                  ) : (
+                    "Analyze Symptoms"
+                  )}
                 </Button>
-                <Button onClick={() => window.print()} variant="secondary">
-                  Print Results
-                </Button>
+
+                <div className="text-center space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    {checksUsed} of {maxFreeChecks} free checks used this month
+                  </p>
+                  {checksUsed >= maxFreeChecks && (
+                    <Alert className="bg-primary/5 border-primary">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        You've reached your free limit. <Link to="/pricing" className="font-semibold underline">Upgrade to Premium</Link> for unlimited checks.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
               </div>
             </section>
+          ) : (
+            <section id="results-section" className="space-y-6 animate-fade-in">
+              <Card className="border-2 border-primary">
+                <CardHeader>
+                  <CardTitle className="text-2xl">Analysis Results</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Urgency Level */}
+                  <div className={`p-6 rounded-lg ${getUrgencyColor(results.urgency)}`}>
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-3xl">{getUrgencyIcon(results.urgency)}</span>
+                      <div>
+                        <h3 className="text-xl font-bold">URGENCY LEVEL: {results.urgency}</h3>
+                        <p className="text-lg mt-1">{results.urgencyMessage}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Possible Causes */}
+                  <div className="space-y-3">
+                    <h3 className="text-xl font-semibold flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5" />
+                      Possible Causes
+                    </h3>
+                    <ol className="space-y-2 pl-5 list-decimal">
+                      {results.possibleCauses.map((cause, index) => (
+                        <li key={index} className="text-base">{cause}</li>
+                      ))}
+                    </ol>
+                    <p className="text-sm text-muted-foreground italic mt-3">
+                      Note: These are educational possibilities based on common patterns. Only a veterinarian can provide accurate diagnosis.
+                    </p>
+                  </div>
+
+                  {/* General Information */}
+                  <div className="space-y-3">
+                    <h3 className="text-xl font-semibold">General Information</h3>
+                    <p className="text-base leading-relaxed">{results.generalInfo}</p>
+                  </div>
+
+                  {/* Warning Signs */}
+                  <div className="space-y-3 bg-red-50 dark:bg-red-950/20 p-4 rounded-lg border-2 border-red-200 dark:border-red-800">
+                    <h3 className="text-xl font-semibold text-red-900 dark:text-red-100">
+                      When to Seek Immediate Help
+                    </h3>
+                    <ul className="space-y-2 pl-5 list-disc">
+                      {results.warningSignsImmediate.map((sign, index) => (
+                        <li key={index} className="text-base text-red-900 dark:text-red-100">{sign}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Home Monitoring Tips */}
+                  <div className="space-y-3 bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg border-2 border-blue-200 dark:border-blue-800">
+                    <h3 className="text-xl font-semibold text-blue-900 dark:text-blue-100">
+                      Home Monitoring Tips
+                    </h3>
+                    <ul className="space-y-2 pl-5 list-disc">
+                      {results.homeMonitoringTips.map((tip, index) => (
+                        <li key={index} className="text-base text-blue-900 dark:text-blue-100">{tip}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Reminder */}
+                  <Alert className="bg-amber-50 dark:bg-amber-950/30 border-2 border-amber-400 dark:border-amber-600">
+                    <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                    <AlertDescription className="text-amber-900 dark:text-amber-200 font-medium">
+                      ⚠️ REMINDER: This is educational information only. Contact your veterinarian for medical advice.
+                    </AlertDescription>
+                  </Alert>
+                </CardContent>
+              </Card>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button asChild variant="default" size="lg" className="flex-1">
+                  <Link to="/tools/vet-finder">
+                    <MapPin className="h-5 w-5 mr-2" />
+                    Find Nearby Vets
+                  </Link>
+                </Button>
+                <Button variant="outline" size="lg" className="flex-1 relative" disabled>
+                  <Lock className="h-4 w-4 mr-2" />
+                  Save Report
+                  <Badge variant="secondary" className="ml-2">Premium</Badge>
+                </Button>
+                <Button variant="ghost" size="lg" onClick={handleReset}>
+                  <RefreshCw className="h-5 w-5 mr-2" />
+                  Check Another
+                </Button>
+              </div>
+
+              {/* Free User Progress */}
+              <Card className="bg-muted/30">
+                <CardContent className="pt-6 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Free Checks This Month</span>
+                    <span className="text-muted-foreground">{checksUsed}/{maxFreeChecks}</span>
+                  </div>
+                  <Progress value={(checksUsed / maxFreeChecks) * 100} className="h-2" />
+                  <div className="flex items-center justify-between pt-2">
+                    <p className="text-sm text-muted-foreground">
+                      {maxFreeChecks - checksUsed} checks remaining
+                    </p>
+                    <Button asChild variant="outline" size="sm">
+                      <Link to="/pricing">Upgrade Now</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
+          )}
+
+          {/* Premium Upsell */}
+          {!results && (
+            <Card className="mt-8 bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+              <CardContent className="pt-6 text-center space-y-4">
+                <div className="flex items-center justify-center gap-2 text-primary">
+                  <Sparkles className="h-6 w-6" />
+                  <h3 className="text-xl font-semibold">Premium Benefits</h3>
+                </div>
+                <p className="text-muted-foreground">
+                  💎 Premium users get unlimited checks + detailed reports + symptom history tracking
+                </p>
+                <Button asChild variant="default">
+                  <Link to="/pricing">Learn More</Link>
+                </Button>
+              </CardContent>
+            </Card>
           )}
         </div>
       </main>
