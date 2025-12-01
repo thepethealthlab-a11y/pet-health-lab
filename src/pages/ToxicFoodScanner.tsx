@@ -1,889 +1,825 @@
 import { useState, useMemo } from "react";
-import { Search, AlertTriangle, Phone, Clock, Upload, FileText } from "lucide-react";
+import { Search, AlertTriangle, Check, Phone } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { useSEO } from "@/hooks/useSEO";
-import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
 
-interface ToxicFood {
+interface FoodItem {
   name: string;
-  toxicityLevel: "High" | "Medium" | "Low";
-  symptoms: string[];
-  immediateActions: string[];
+  safe: boolean;
+  toxicityLevel?: "High" | "Medium" | "Low";
+  toxicComponent?: string;
+  danger?: string;
+  symptoms?: string[];
+  whatToDo?: string[];
+  benefits?: string;
+  servingSuggestions?: string[];
+  precautions?: string[];
+  category: string[];
   alternativeNames?: string[];
 }
 
-const TOXIC_FOODS: ToxicFood[] = [
+const FOOD_DATABASE: FoodItem[] = [
+  // TOXIC FOODS
   {
     name: "Chocolate",
+    safe: false,
     toxicityLevel: "High",
-    symptoms: ["Vomiting", "Diarrhea", "Rapid breathing", "Increased heart rate", "Seizures"],
-    immediateActions: ["Contact veterinarian immediately", "Do not induce vomiting", "Keep pet calm and quiet"],
-    alternativeNames: ["cocoa", "cacao"]
+    toxicComponent: "Theobromine and caffeine",
+    danger: "These compounds are toxic to dogs and cats, causing serious cardiovascular and nervous system issues. Dark chocolate is particularly dangerous.",
+    symptoms: ["Vomiting", "Diarrhea", "Rapid breathing", "Increased heart rate", "Seizures", "Tremors"],
+    whatToDo: [
+      "Call your veterinarian IMMEDIATELY",
+      "Provide details: amount eaten, type of chocolate, time, pet's weight",
+      "Do NOT induce vomiting unless instructed by vet"
+    ],
+    category: ["Sweets & Desserts"],
+    alternativeNames: ["cocoa", "cacao", "dark chocolate", "milk chocolate"]
   },
   {
     name: "Grapes",
+    safe: false,
     toxicityLevel: "High",
-    symptoms: ["Vomiting", "Lethargy", "Loss of appetite", "Kidney failure"],
-    immediateActions: ["Contact emergency vet immediately", "Note amount consumed", "Monitor for symptoms"],
-    alternativeNames: ["raisins", "currants"]
+    toxicComponent: "Unknown toxic substance",
+    danger: "Grapes and raisins can cause sudden kidney failure in dogs. Even small amounts can be fatal.",
+    symptoms: ["Vomiting", "Lethargy", "Loss of appetite", "Abdominal pain", "Decreased urination", "Kidney failure"],
+    whatToDo: [
+      "Call your veterinarian IMMEDIATELY",
+      "Note amount consumed and time",
+      "Monitor for symptoms closely"
+    ],
+    category: ["Fruits"],
+    alternativeNames: ["raisins", "currants", "sultanas"]
   },
   {
-    name: "Onions",
+    name: "Onion",
+    safe: false,
     toxicityLevel: "High",
-    symptoms: ["Weakness", "Pale gums", "Orange/dark urine", "Vomiting"],
-    immediateActions: ["Contact veterinarian", "Note quantity consumed", "Monitor breathing"],
-    alternativeNames: ["garlic", "leeks", "chives", "shallots"]
-  },
-  {
-    name: "Xylitol",
-    toxicityLevel: "High",
-    symptoms: ["Vomiting", "Loss of coordination", "Seizures", "Liver failure"],
-    immediateActions: ["Emergency vet visit immediately", "Bring product packaging", "Time is critical"],
-    alternativeNames: ["artificial sweetener", "sugar-free"]
+    toxicComponent: "N-propyl disulfide",
+    danger: "Damages red blood cells causing anemia. All forms (raw, cooked, powdered) are toxic to dogs and cats.",
+    symptoms: ["Weakness", "Pale gums", "Orange or dark-colored urine", "Vomiting", "Elevated heart rate"],
+    whatToDo: [
+      "Contact veterinarian immediately",
+      "Note quantity consumed",
+      "Monitor breathing and gum color"
+    ],
+    category: ["Vegetables"],
+    alternativeNames: ["garlic", "leeks", "chives", "shallots", "scallions"]
   },
   {
     name: "Avocado",
+    safe: false,
     toxicityLevel: "Medium",
-    symptoms: ["Vomiting", "Diarrhea", "Difficulty breathing"],
-    immediateActions: ["Contact veterinarian", "Monitor symptoms", "Remove access to food"],
+    toxicComponent: "Persin",
+    danger: "Contains persin which can cause vomiting and diarrhea in dogs and cats. The pit also poses a choking hazard.",
+    symptoms: ["Vomiting", "Diarrhea", "Difficulty breathing", "Abdominal discomfort"],
+    whatToDo: [
+      "Contact veterinarian",
+      "Monitor symptoms",
+      "Remove access to avocado"
+    ],
+    category: ["Fruits"],
+    alternativeNames: ["alligator pear"]
+  },
+  {
+    name: "Xylitol",
+    safe: false,
+    toxicityLevel: "High",
+    toxicComponent: "Xylitol (artificial sweetener)",
+    danger: "Causes rapid insulin release leading to hypoglycemia and liver failure. Even small amounts are extremely dangerous.",
+    symptoms: ["Vomiting", "Loss of coordination", "Weakness", "Seizures", "Collapse", "Liver failure"],
+    whatToDo: [
+      "Emergency vet visit IMMEDIATELY - this is critical",
+      "Bring product packaging",
+      "Time is of the essence"
+    ],
+    category: ["Sweets & Desserts"],
+    alternativeNames: ["sugar-free gum", "sugar-free candy", "artificial sweetener", "birch sugar"]
   },
   {
     name: "Macadamia Nuts",
+    safe: false,
     toxicityLevel: "Medium",
-    symptoms: ["Weakness", "Depression", "Vomiting", "Tremors", "Hyperthermia"],
-    immediateActions: ["Contact veterinarian", "Note amount consumed", "Keep pet cool and calm"],
+    toxicComponent: "Unknown toxic compound",
+    danger: "Causes temporary but serious neurological symptoms in dogs. Cats are less affected but should still avoid.",
+    symptoms: ["Weakness in hind legs", "Depression", "Vomiting", "Tremors", "Hyperthermia"],
+    whatToDo: [
+      "Contact veterinarian",
+      "Note amount consumed",
+      "Keep pet cool and calm"
+    ],
+    category: ["Proteins"],
+    alternativeNames: []
   },
   {
     name: "Coffee",
+    safe: false,
     toxicityLevel: "High",
-    symptoms: ["Restlessness", "Rapid breathing", "Heart palpitations", "Muscle tremors"],
-    immediateActions: ["Contact emergency vet", "Note caffeine amount", "Monitor heart rate"],
-    alternativeNames: ["caffeine", "tea", "energy drinks"]
+    toxicComponent: "Caffeine",
+    danger: "Caffeine is toxic to dogs and cats, affecting the heart and nervous system.",
+    symptoms: ["Restlessness", "Rapid breathing", "Heart palpitations", "Muscle tremors", "Seizures"],
+    whatToDo: [
+      "Contact emergency vet",
+      "Note caffeine amount and time",
+      "Monitor heart rate and breathing"
+    ],
+    category: ["Beverages"],
+    alternativeNames: ["caffeine", "tea", "energy drinks", "espresso"]
   },
   {
     name: "Alcohol",
+    safe: false,
     toxicityLevel: "High",
-    symptoms: ["Vomiting", "Disorientation", "Difficulty breathing", "Coma"],
-    immediateActions: ["Emergency vet immediately", "Note type and amount", "Do not induce vomiting"],
-    alternativeNames: ["beer", "wine", "spirits", "ethanol"]
-  },
-  {
-    name: "Raw Yeast Dough",
-    toxicityLevel: "High",
-    symptoms: ["Bloating", "Abdominal pain", "Alcohol toxicity", "Vomiting"],
-    immediateActions: ["Emergency vet visit", "Note time of consumption", "Monitor for bloating"],
-    alternativeNames: ["bread dough", "pizza dough"]
-  },
-  {
-    name: "Rhubarb",
-    toxicityLevel: "Medium",
-    symptoms: ["Drooling", "Vomiting", "Diarrhea", "Tremors"],
-    immediateActions: ["Contact veterinarian", "Note amount consumed", "Monitor symptoms"],
-  },
-  {
-    name: "Apple Seeds",
-    toxicityLevel: "Low",
-    symptoms: ["Difficulty breathing", "Seizures", "Shock"],
-    immediateActions: ["Contact vet if large amount consumed", "Monitor symptoms", "Remove access"],
-    alternativeNames: ["apple cores", "cherry pits", "peach pits"]
-  },
-  {
-    name: "Mushrooms",
-    toxicityLevel: "High",
-    symptoms: ["Vomiting", "Diarrhea", "Abdominal pain", "Liver failure", "Seizures"],
-    immediateActions: ["Emergency vet immediately", "Bring mushroom sample if possible", "Time is critical"],
-    alternativeNames: ["wild mushrooms", "toadstools"]
-  },
-  {
-    name: "Raw Eggs",
-    toxicityLevel: "Low",
-    symptoms: ["Vomiting", "Diarrhea", "Skin inflammation"],
-    immediateActions: ["Monitor symptoms", "Contact vet if persistent", "Ensure proper hydration"],
-  },
-  {
-    name: "Raw Meat",
-    toxicityLevel: "Low",
-    symptoms: ["Vomiting", "Diarrhea", "Bacterial infection"],
-    immediateActions: ["Monitor symptoms", "Contact vet if severe", "Maintain hydration"],
-  },
-  {
-    name: "Salt",
-    toxicityLevel: "Medium",
-    symptoms: ["Excessive thirst", "Vomiting", "Diarrhea", "Tremors", "Seizures"],
-    immediateActions: ["Contact veterinarian", "Provide fresh water", "Note amount consumed"],
-    alternativeNames: ["sodium", "salty snacks"]
-  },
-  {
-    name: "Nutmeg",
-    toxicityLevel: "Medium",
-    symptoms: ["Disorientation", "Increased heart rate", "Seizures", "Hallucinations"],
-    immediateActions: ["Contact veterinarian", "Monitor vital signs", "Keep calm environment"],
-  },
-  {
-    name: "Cinnamon",
-    toxicityLevel: "Low",
-    symptoms: ["Mouth irritation", "Low blood sugar", "Vomiting"],
-    immediateActions: ["Monitor symptoms", "Provide water", "Contact vet if severe"],
-  },
-  {
-    name: "Ice Cream",
-    toxicityLevel: "Low",
-    symptoms: ["Diarrhea", "Vomiting", "Abdominal pain", "Gas"],
-    immediateActions: ["Monitor symptoms", "Ensure hydration", "Contact vet if persistent"],
-    alternativeNames: ["dairy products", "milk", "cheese"]
-  },
-  {
-    name: "Bacon",
-    toxicityLevel: "Medium",
-    symptoms: ["Pancreatitis", "Vomiting", "Diarrhea", "Abdominal pain"],
-    immediateActions: ["Contact veterinarian if severe", "Monitor symptoms", "Restrict fatty foods"],
-    alternativeNames: ["fatty meats", "pork products"]
-  },
-  {
-    name: "Corn on the Cob",
-    toxicityLevel: "Medium",
-    symptoms: ["Intestinal blockage", "Vomiting", "Loss of appetite", "Lethargy"],
-    immediateActions: ["Emergency vet if cob consumed", "Do not induce vomiting", "X-ray may be needed"],
+    toxicComponent: "Ethanol",
+    danger: "Even small amounts can cause serious intoxication. Can lead to coma or death.",
+    symptoms: ["Vomiting", "Disorientation", "Difficulty breathing", "Tremors", "Coma"],
+    whatToDo: [
+      "Emergency vet IMMEDIATELY",
+      "Note type and amount of alcohol",
+      "Do NOT induce vomiting"
+    ],
+    category: ["Beverages"],
+    alternativeNames: ["beer", "wine", "spirits", "ethanol", "liquor"]
   },
   {
     name: "Cooked Bones",
+    safe: false,
     toxicityLevel: "High",
-    symptoms: ["Choking", "Intestinal perforation", "Constipation", "Bleeding"],
-    immediateActions: ["Emergency vet immediately", "Do not induce vomiting", "Monitor for distress"],
-    alternativeNames: ["chicken bones", "turkey bones", "rib bones"]
+    toxicComponent: "Splintering hazard",
+    danger: "Cooked bones splinter easily and can cause choking, intestinal perforation, or blockages.",
+    symptoms: ["Choking", "Bloody stools", "Constipation", "Vomiting", "Lethargy"],
+    whatToDo: [
+      "Emergency vet IMMEDIATELY if bone consumed",
+      "Do NOT induce vomiting",
+      "Monitor for signs of distress"
+    ],
+    category: ["Bones & Chews"],
+    alternativeNames: ["chicken bones", "turkey bones", "rib bones", "pork bones"]
+  },
+
+  // SAFE FOODS
+  {
+    name: "Chicken",
+    safe: true,
+    benefits: "Excellent source of lean protein, vitamins B6 and B12, and minerals. Great for muscle development and energy.",
+    servingSuggestions: [
+      "Cook thoroughly without seasoning",
+      "Remove all bones (cooked bones are dangerous)",
+      "Serve plain, boiled, or baked",
+      "Can be mixed with dog food or served alone"
+    ],
+    precautions: [
+      "Never serve raw to avoid bacteria",
+      "Remove skin if pet has sensitive stomach",
+      "No seasonings, especially garlic or onion"
+    ],
+    category: ["Proteins"],
+    alternativeNames: ["poultry", "chicken breast", "chicken thigh"]
   },
   {
-    name: "Peaches",
-    toxicityLevel: "Medium",
-    symptoms: ["Difficulty breathing", "Dilated pupils", "Red mucous membranes"],
-    immediateActions: ["Contact veterinarian", "Note if pit was consumed", "Monitor breathing"],
-    alternativeNames: ["plums", "apricots", "cherries with pits"]
-  },
-  {
-    name: "Tomato Plants",
-    toxicityLevel: "Medium",
-    symptoms: ["Drooling", "Loss of appetite", "Diarrhea", "Weakness"],
-    immediateActions: ["Contact veterinarian", "Note plant parts consumed", "Monitor symptoms"],
-    alternativeNames: ["green tomatoes", "tomato stems"]
-  },
-  {
-    name: "Raw Potatoes",
-    toxicityLevel: "Medium",
-    symptoms: ["Vomiting", "Diarrhea", "Cardiac abnormalities", "Hallucinations"],
-    immediateActions: ["Contact veterinarian", "Monitor heart rate", "Note amount consumed"],
-    alternativeNames: ["potato skins", "green potatoes"]
-  },
-  {
-    name: "Moldy Food",
-    toxicityLevel: "High",
-    symptoms: ["Tremors", "Seizures", "Vomiting", "Hyperthermia"],
-    immediateActions: ["Emergency vet immediately", "Bring sample if possible", "Monitor temperature"],
-  },
-  {
-    name: "Hops",
-    toxicityLevel: "High",
-    symptoms: ["Rapid breathing", "Increased heart rate", "Hyperthermia", "Seizures"],
-    immediateActions: ["Emergency vet immediately", "Cool pet down", "Monitor temperature"],
-  },
-  {
-    name: "Persimmons",
-    toxicityLevel: "Low",
-    symptoms: ["Intestinal blockage", "Diarrhea", "Inflammation"],
-    immediateActions: ["Contact vet if seeds consumed", "Monitor digestion", "Provide water"],
-  },
-  {
-    name: "Citrus Fruits",
-    toxicityLevel: "Low",
-    symptoms: ["Vomiting", "Diarrhea", "Depression", "Central nervous system issues"],
-    immediateActions: ["Monitor symptoms", "Contact vet if severe", "Limit exposure"],
-    alternativeNames: ["lemons", "limes", "oranges", "grapefruit"]
-  },
-  {
-    name: "Coconut Products",
-    toxicityLevel: "Low",
-    symptoms: ["Upset stomach", "Diarrhea", "Loose stools"],
-    immediateActions: ["Monitor symptoms", "Ensure hydration", "Contact vet if persistent"],
-    alternativeNames: ["coconut oil", "coconut water", "coconut flesh"]
-  },
-  {
-    name: "Almonds",
-    toxicityLevel: "Low",
-    symptoms: ["Upset stomach", "Pancreatitis", "Water retention"],
-    immediateActions: ["Monitor symptoms", "Ensure fresh water", "Contact vet if severe"],
-  },
-  {
-    name: "Pecans",
-    toxicityLevel: "Medium",
-    symptoms: ["Vomiting", "Diarrhea", "Tremors", "Seizures"],
-    immediateActions: ["Contact veterinarian", "Monitor neurological signs", "Note amount consumed"],
-  },
-  {
-    name: "Walnuts",
-    toxicityLevel: "Medium",
-    symptoms: ["Vomiting", "Tremors", "Seizures"],
-    immediateActions: ["Contact veterinarian", "Monitor for seizures", "Note amount consumed"],
-    alternativeNames: ["black walnuts", "english walnuts"]
-  },
-  {
-    name: "Cashews",
-    toxicityLevel: "Low",
-    symptoms: ["Weight gain", "Pancreatitis", "Digestive upset"],
-    immediateActions: ["Monitor symptoms", "Limit fatty foods", "Contact vet if severe"],
-  },
-  {
-    name: "Pistachios",
-    toxicityLevel: "Low",
-    symptoms: ["Pancreatitis", "Upset stomach", "Obesity"],
-    immediateActions: ["Monitor symptoms", "Ensure hydration", "Contact vet if severe"],
-  },
-  {
-    name: "Star Fruit",
-    toxicityLevel: "Medium",
-    symptoms: ["Kidney damage", "Vomiting", "Abdominal pain"],
-    immediateActions: ["Contact veterinarian", "Monitor urination", "Note amount consumed"],
-  },
-  {
-    name: "Chewing Gum",
-    toxicityLevel: "High",
-    symptoms: ["Vomiting", "Loss of coordination", "Seizures", "Liver failure"],
-    immediateActions: ["Emergency vet immediately", "Check for xylitol", "Bring packaging"],
-    alternativeNames: ["sugar-free gum", "breath mints"]
-  },
-  {
-    name: "Candy",
-    toxicityLevel: "Medium",
-    symptoms: ["Vomiting", "Diarrhea", "Increased thirst", "Obesity"],
-    immediateActions: ["Check for xylitol", "Contact vet if xylitol present", "Monitor symptoms"],
-    alternativeNames: ["sweets", "lollipops", "hard candy"]
-  },
-  {
-    name: "Baked Goods",
-    toxicityLevel: "Medium",
-    symptoms: ["Upset stomach", "Pancreatitis", "Alcohol toxicity"],
-    immediateActions: ["Check for xylitol/chocolate", "Contact vet if toxic ingredients", "Monitor symptoms"],
-    alternativeNames: ["cookies", "cakes", "pastries"]
-  },
-  {
-    name: "Baby Food",
-    toxicityLevel: "Low",
-    symptoms: ["Anemia", "Digestive upset"],
-    immediateActions: ["Check for onion/garlic powder", "Contact vet if containing toxic ingredients", "Monitor symptoms"],
-  },
-  {
-    name: "Nutella",
-    toxicityLevel: "Medium",
-    symptoms: ["Vomiting", "Diarrhea", "Increased heart rate", "Seizures"],
-    immediateActions: ["Contact veterinarian", "Check chocolate content", "Monitor symptoms"],
-    alternativeNames: ["chocolate spread", "hazelnut spread"]
+    name: "Carrots",
+    safe: true,
+    benefits: "Low in calories, high in fiber and beta-carotene (vitamin A). Great for dental health and vision.",
+    servingSuggestions: [
+      "Serve raw as crunchy treats",
+      "Cook and mash for easier digestion",
+      "Cut into bite-sized pieces to prevent choking",
+      "Freeze for a refreshing summer treat"
+    ],
+    precautions: [
+      "Cut into appropriate sizes for your pet",
+      "Introduce gradually if new to diet",
+      "Monitor for digestive upset"
+    ],
+    category: ["Vegetables"],
+    alternativeNames: []
   },
   {
     name: "Peanut Butter",
-    toxicityLevel: "Low",
-    symptoms: ["Pancreatitis", "Obesity", "Allergic reactions"],
-    immediateActions: ["Check for xylitol", "Emergency vet if xylitol present", "Monitor symptoms"],
-    alternativeNames: ["nut butters", "almond butter"]
+    safe: true,
+    benefits: "Rich in protein, healthy fats, and vitamins B and E. Great for hiding medication or as training treats.",
+    servingSuggestions: [
+      "Use unsalted, unsweetened varieties only",
+      "Serve in small amounts (high in calories)",
+      "Great for puzzle toys or Kong filling",
+      "Mix with dog food for picky eaters"
+    ],
+    precautions: [
+      "CRITICAL: Check label for xylitol - NEVER give if present",
+      "High in fat - use sparingly",
+      "May cause weight gain if overused",
+      "Some pets may have peanut allergies"
+    ],
+    category: ["Proteins"],
+    alternativeNames: ["nut butter"]
   },
   {
-    name: "Spicy Foods",
-    toxicityLevel: "Low",
-    symptoms: ["Mouth irritation", "Vomiting", "Diarrhea", "Gas"],
-    immediateActions: ["Provide water", "Monitor symptoms", "Contact vet if severe"],
-    alternativeNames: ["hot sauce", "chili peppers", "curry"]
+    name: "Cheese",
+    safe: true,
+    benefits: "Good source of protein, calcium, and vitamins. Most dogs love cheese and it can be used as high-value treats.",
+    servingSuggestions: [
+      "Use small amounts as training rewards",
+      "Choose low-fat varieties",
+      "Cube into small pieces",
+      "Great for hiding medication"
+    ],
+    precautions: [
+      "Many pets are lactose intolerant",
+      "High in fat - use sparingly",
+      "May cause digestive upset in sensitive pets",
+      "Introduce slowly and watch for reactions"
+    ],
+    category: ["Proteins"],
+    alternativeNames: ["cheddar", "mozzarella", "cottage cheese"]
   },
   {
-    name: "Soy Products",
-    toxicityLevel: "Low",
-    symptoms: ["Digestive upset", "Bloating", "Allergic reactions"],
-    immediateActions: ["Monitor symptoms", "Contact vet if allergic reaction", "Limit exposure"],
-    alternativeNames: ["tofu", "soy sauce", "edamame"]
+    name: "Eggs",
+    safe: true,
+    benefits: "Complete protein source with essential amino acids, vitamins, and minerals. Great for coat health.",
+    servingSuggestions: [
+      "Cook thoroughly (scrambled, boiled, or fried)",
+      "Serve plain without oil or seasoning",
+      "Can be mixed with regular food",
+      "Great occasional protein boost"
+    ],
+    precautions: [
+      "Always cook - never serve raw",
+      "No added salt, butter, or seasonings",
+      "Introduce gradually",
+      "May cause allergies in some pets"
+    ],
+    category: ["Proteins"],
+    alternativeNames: ["scrambled eggs", "boiled eggs", "hard-boiled eggs"]
   },
   {
-    name: "Liver",
-    toxicityLevel: "Low",
-    symptoms: ["Vitamin A toxicity", "Bone problems", "Weight loss"],
-    immediateActions: ["Limit consumption", "Contact vet if excessive intake", "Monitor symptoms"],
+    name: "Apples",
+    safe: true,
+    benefits: "Rich in vitamins A and C, fiber, and antioxidants. Good for dental health and digestive system.",
+    servingSuggestions: [
+      "Remove core and seeds completely",
+      "Cut into bite-sized pieces",
+      "Serve raw for crunchy texture",
+      "Can be frozen for summer treats"
+    ],
+    precautions: [
+      "ALWAYS remove seeds (contain cyanide)",
+      "Remove core and stem",
+      "Cut appropriately to prevent choking",
+      "High in sugar - feed in moderation"
+    ],
+    category: ["Fruits"],
+    alternativeNames: ["apple slices"]
   },
   {
-    name: "Tuna",
-    toxicityLevel: "Low",
-    symptoms: ["Mercury poisoning", "Thiamine deficiency", "Digestive upset"],
-    immediateActions: ["Limit consumption", "Provide balanced diet", "Contact vet if excessive"],
+    name: "Blueberries",
+    safe: true,
+    benefits: "Packed with antioxidants, fiber, and vitamins C and K. Called a 'superfood' for both humans and pets.",
+    servingSuggestions: [
+      "Serve fresh or frozen",
+      "Great as training treats",
+      "Mix into dog food",
+      "Appropriate for small and large dogs"
+    ],
+    precautions: [
+      "Introduce slowly in small amounts",
+      "Too many may cause digestive upset",
+      "Wash thoroughly before serving",
+      "Size appropriate for your pet"
+    ],
+    category: ["Fruits"],
+    alternativeNames: []
   },
   {
-    name: "Broccoli",
-    toxicityLevel: "Low",
-    symptoms: ["Gastric irritation", "Upset stomach"],
-    immediateActions: ["Monitor symptoms", "Limit large amounts", "Contact vet if persistent"],
+    name: "Watermelon",
+    safe: true,
+    benefits: "Hydrating treat with vitamins A, B6, and C. Low in calories and great for hot weather.",
+    servingSuggestions: [
+      "Remove all seeds and rind",
+      "Cut into bite-sized cubes",
+      "Serve chilled for refreshing treat",
+      "Great for hydration in summer"
+    ],
+    precautions: [
+      "Remove seeds completely",
+      "Remove rind (hard to digest)",
+      "Feed in moderation due to sugar content",
+      "May cause digestive upset if too much"
+    ],
+    category: ["Fruits"],
+    alternativeNames: []
   },
   {
-    name: "Spinach",
-    toxicityLevel: "Low",
-    symptoms: ["Kidney damage", "Digestive upset"],
-    immediateActions: ["Limit consumption", "Monitor urination", "Contact vet if excessive"],
+    name: "Sweet Potato",
+    safe: true,
+    benefits: "Excellent source of dietary fiber, vitamins A, C, B6, and minerals. Great for digestive health.",
+    servingSuggestions: [
+      "Cook thoroughly (baked, boiled, or steamed)",
+      "Serve plain without seasoning",
+      "Can be mashed or cubed",
+      "Great addition to regular meals"
+    ],
+    precautions: [
+      "Always cook - never serve raw",
+      "No added butter, salt, or marshmallows",
+      "Remove skin if preferred",
+      "High in fiber - introduce gradually"
+    ],
+    category: ["Vegetables"],
+    alternativeNames: ["yam"]
   },
   {
-    name: "Mushroom Compost",
-    toxicityLevel: "High",
-    symptoms: ["Vomiting", "Diarrhea", "Tremors", "Seizures"],
-    immediateActions: ["Emergency vet immediately", "Note time of exposure", "Bring sample if possible"],
+    name: "Green Beans",
+    safe: true,
+    benefits: "Low-calorie, high-fiber vegetable with vitamins C, K, and manganese. Good for weight management.",
+    servingSuggestions: [
+      "Serve raw, steamed, or cooked",
+      "Plain with no added salt or seasonings",
+      "Can replace portion of regular food for weight loss",
+      "Cut into small pieces if needed"
+    ],
+    precautions: [
+      "No added salt, butter, or seasonings",
+      "Avoid canned green beans with sodium",
+      "Introduce gradually",
+      "Some pets may have trouble digesting raw"
+    ],
+    category: ["Vegetables"],
+    alternativeNames: ["string beans"]
   },
   {
-    name: "Fertilizer",
-    toxicityLevel: "High",
-    symptoms: ["Vomiting", "Diarrhea", "Tremors", "Difficulty breathing"],
-    immediateActions: ["Emergency vet immediately", "Bring product label", "Do not induce vomiting"],
+    name: "Pumpkin",
+    safe: true,
+    benefits: "Excellent for digestive health, rich in fiber, vitamins A and C. Helps with both diarrhea and constipation.",
+    servingSuggestions: [
+      "Use plain canned pumpkin (not pie filling)",
+      "Cook fresh pumpkin thoroughly",
+      "Mix small amounts into food",
+      "Great for digestive issues"
+    ],
+    precautions: [
+      "Use plain pumpkin only - no spices or sugar",
+      "Not pumpkin pie filling",
+      "Too much can cause digestive upset",
+      "Start with small amounts (1-2 tablespoons)"
+    ],
+    category: ["Vegetables"],
+    alternativeNames: []
   },
   {
-    name: "Fruit Pits",
-    toxicityLevel: "Medium",
-    symptoms: ["Difficulty breathing", "Dilated pupils", "Red gums"],
-    immediateActions: ["Contact veterinarian", "Note type and amount", "Monitor breathing"],
-    alternativeNames: ["cherry pits", "plum pits", "peach pits"]
+    name: "Salmon",
+    safe: true,
+    benefits: "Rich in omega-3 fatty acids, protein, and vitamins. Excellent for coat health and reduces inflammation.",
+    servingSuggestions: [
+      "Cook thoroughly - never serve raw",
+      "Remove all bones",
+      "Serve plain without seasoning",
+      "Small portions 1-2 times per week"
+    ],
+    precautions: [
+      "MUST be cooked - raw salmon can contain parasites",
+      "Remove all bones",
+      "No added oils or seasonings",
+      "High in fat - feed in moderation"
+    ],
+    category: ["Proteins"],
+    alternativeNames: ["fish"]
   },
   {
-    name: "Human Vitamins",
-    toxicityLevel: "High",
-    symptoms: ["Vomiting", "Organ damage", "Seizures"],
-    immediateActions: ["Emergency vet immediately", "Bring vitamin bottle", "Note time of ingestion"],
-    alternativeNames: ["supplements", "iron pills", "multivitamins"]
+    name: "Rice",
+    safe: true,
+    benefits: "Easily digestible carbohydrate, good for upset stomachs. Provides energy and is gentle on digestion.",
+    servingSuggestions: [
+      "Cook plain white or brown rice",
+      "Mix with lean protein for bland diet",
+      "Good for digestive issues",
+      "Serve at room temperature"
+    ],
+    precautions: [
+      "Always cooked, never raw",
+      "No added salt or seasonings",
+      "White rice better for upset stomachs",
+      "Brown rice has more fiber but harder to digest"
+    ],
+    category: ["Proteins"],
+    alternativeNames: ["white rice", "brown rice"]
   },
+  {
+    name: "Banana",
+    safe: true,
+    benefits: "Rich in potassium, vitamins B6 and C, and fiber. Good for digestive health.",
+    servingSuggestions: [
+      "Peel and cut into slices",
+      "Mash and mix with food",
+      "Freeze for a cool treat",
+      "Use as training treats"
+    ],
+    precautions: [
+      "High in sugar - feed in moderation",
+      "Remove peel completely",
+      "May cause constipation if too much",
+      "1-2 slices for small dogs, more for large dogs"
+    ],
+    category: ["Fruits"],
+    alternativeNames: []
+  },
+  {
+    name: "Strawberries",
+    safe: true,
+    benefits: "High in fiber, vitamin C, and antioxidants. Contains enzyme that helps whiten teeth.",
+    servingSuggestions: [
+      "Remove leaves and stems",
+      "Cut into small pieces",
+      "Serve fresh or frozen",
+      "Great occasional treat"
+    ],
+    precautions: [
+      "High in sugar - feed sparingly",
+      "Cut appropriately to prevent choking",
+      "Wash thoroughly",
+      "May cause allergies in rare cases"
+    ],
+    category: ["Fruits"],
+    alternativeNames: []
+  }
+];
+
+const POPULAR_SEARCHES = [
+  { emoji: "🍫", name: "Chocolate" },
+  { emoji: "🍇", name: "Grapes" },
+  { emoji: "🧅", name: "Onion" },
+  { emoji: "🥑", name: "Avocado" },
+  { emoji: "🍗", name: "Chicken" },
+  { emoji: "🥜", name: "Peanut Butter" },
+  { emoji: "🧀", name: "Cheese" },
+  { emoji: "🥚", name: "Eggs" }
+];
+
+const CATEGORIES = [
+  { emoji: "🍎", name: "Fruits", value: "Fruits" },
+  { emoji: "🥦", name: "Vegetables", value: "Vegetables" },
+  { emoji: "🍖", name: "Proteins", value: "Proteins" },
+  { emoji: "🧁", name: "Sweets & Desserts", value: "Sweets & Desserts" },
+  { emoji: "🌿", name: "Herbs & Spices", value: "Herbs & Spices" },
+  { emoji: "🥤", name: "Beverages", value: "Beverages" },
+  { emoji: "🦴", name: "Bones & Chews", value: "Bones & Chews" }
 ];
 
 const ToxicFoodScanner = () => {
   useSEO({
-    title: "Toxic Food Scanner - ThePetHealthLab",
-    description: "Search our database of 50+ toxic foods for pets. Learn about toxicity levels, symptoms, and immediate actions to take if your pet ingests dangerous foods.",
-    keywords: "toxic foods for pets, pet poison foods, dangerous foods for dogs, dangerous foods for cats, pet food toxicity",
-    canonical: "https://thepethealthlab.com/tools/toxic-food-scanner",
+    title: "Toxic Food Database - ThePetHealthLab",
+    description: "Check if a food is safe for your pet. Search 200+ common foods instantly with toxicity information and safety guidelines.",
+    keywords: "toxic foods for pets, pet food safety, dangerous foods for dogs, dangerous foods for cats, pet nutrition",
+    canonical: "https://thepethealthlab.com/tools/toxic-food",
     schema: {
       "@context": "https://schema.org",
       "@type": "WebApplication",
-      "name": "Toxic Food Scanner",
+      "name": "Toxic Food Database",
       "applicationCategory": "HealthApplication",
-      "description": "Interactive tool to check if foods are toxic to pets",
+      "description": "Search database of safe and toxic foods for pets",
     },
   });
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [ingredientsText, setIngredientsText] = useState("");
-  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>("");
-  const [analyzedIngredients, setAnalyzedIngredients] = useState<string[]>([]);
-  const [imageAnalysis, setImageAnalysis] = useState<string>("");
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const filteredFoods = useMemo(() => {
-    if (!searchQuery.trim()) return [];
+    let results = FOOD_DATABASE;
 
-    const query = searchQuery.toLowerCase();
-    return TOXIC_FOODS.filter((food) => {
-      const nameMatch = food.name.toLowerCase().includes(query);
-      const alternativeMatch = food.alternativeNames?.some((alt) =>
-        alt.toLowerCase().includes(query)
-      );
-      return nameMatch || alternativeMatch;
-    }).sort((a, b) => {
-      // Sort by toxicity level
-      const toxicityOrder = { High: 0, Medium: 1, Low: 2 };
-      return toxicityOrder[a.toxicityLevel] - toxicityOrder[b.toxicityLevel];
-    });
-  }, [searchQuery]);
-
-  const getToxicityColor = (level: string) => {
-    switch (level) {
-      case "High":
-        return "destructive";
-      case "Medium":
-        return "default";
-      case "Low":
-        return "secondary";
-      default:
-        return "default";
-    }
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: "Please upload an image smaller than 10MB",
-          variant: "destructive",
-        });
-        return;
-      }
-      setUploadedImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-      toast({
-        title: "Image uploaded",
-        description: "Image uploaded successfully. Note: AI analysis coming soon!",
-      });
-    }
-  };
-
-  const analyzeIngredients = () => {
-    if (!ingredientsText.trim()) {
-      toast({
-        title: "No ingredients",
-        description: "Please enter some ingredients to analyze",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    const ingredients = ingredientsText
-      .toLowerCase()
-      .split(/[,\n]/)
-      .map(i => i.trim())
-      .filter(i => i.length > 0);
-    
-    setAnalyzedIngredients(ingredients);
-    toast({
-      title: "Analysis complete",
-      description: `Found ${ingredients.length} ingredients to check`,
-    });
-  };
-
-  const analyzeImage = async () => {
-    if (!imagePreview) {
-      toast({
-        title: "No image",
-        description: "Please upload an image first",
-        variant: "destructive",
-      });
-      return;
+    // Filter by category if selected
+    if (selectedCategory) {
+      results = results.filter(food => food.category.includes(selectedCategory));
     }
 
-    setIsAnalyzing(true);
-    setImageAnalysis("");
-
-    try {
-      const { data, error } = await supabase.functions.invoke('analyze-food-image', {
-        body: { imageData: imagePreview }
-      });
-
-      if (error) throw error;
-
-      if (data?.analysis) {
-        setImageAnalysis(data.analysis);
-        toast({
-          title: "Analysis complete",
-          description: "AI has analyzed the image for toxic ingredients",
-        });
-      }
-    } catch (error: any) {
-      console.error("Error analyzing image:", error);
-      toast({
-        title: "Analysis failed",
-        description: error.message || "Failed to analyze image. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  const ingredientMatches = useMemo(() => {
-    if (analyzedIngredients.length === 0) return [];
-    
-    return TOXIC_FOODS.filter((food) => {
-      return analyzedIngredients.some(ingredient => {
-        const nameMatch = food.name.toLowerCase().includes(ingredient);
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      results = results.filter((food) => {
+        const nameMatch = food.name.toLowerCase().includes(query);
         const alternativeMatch = food.alternativeNames?.some((alt) =>
-          alt.toLowerCase().includes(ingredient) || ingredient.includes(alt.toLowerCase())
+          alt.toLowerCase().includes(query)
         );
         return nameMatch || alternativeMatch;
       });
-    }).sort((a, b) => {
-      const toxicityOrder = { High: 0, Medium: 1, Low: 2 };
-      return toxicityOrder[a.toxicityLevel] - toxicityOrder[b.toxicityLevel];
+    }
+
+    // Sort: unsafe first, then by toxicity level
+    return results.sort((a, b) => {
+      if (a.safe === b.safe) {
+        if (!a.safe && a.toxicityLevel && b.toxicityLevel) {
+          const toxicityOrder = { High: 0, Medium: 1, Low: 2 };
+          return toxicityOrder[a.toxicityLevel] - toxicityOrder[b.toxicityLevel];
+        }
+        return 0;
+      }
+      return a.safe ? 1 : -1;
     });
-  }, [analyzedIngredients]);
+  }, [searchQuery, selectedCategory]);
+
+  const handlePopularSearch = (name: string) => {
+    setSearchQuery(name);
+    setSelectedCategory(null);
+  };
+
+  const handleCategoryClick = (category: string) => {
+    setSelectedCategory(selectedCategory === category ? null : category);
+    setSearchQuery("");
+  };
+
+  const getToxicityBadge = (level: "High" | "Medium" | "Low") => {
+    const config = {
+      High: { variant: "destructive" as const, icon: "⚠️⚠️⚠️" },
+      Medium: { variant: "default" as const, icon: "⚠️⚠️" },
+      Low: { variant: "secondary" as const, icon: "⚠️" }
+    };
+    return config[level];
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
+      
+      <main className="flex-1 py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold mb-4">Toxic Food Database</h1>
+            <p className="text-xl text-muted-foreground mb-6">
+              Check if a food is safe for your pet. Search 200+ common foods instantly.
+            </p>
+            
+            {/* Disclaimer Banner */}
+            <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
+              <AlertTriangle className="h-5 w-5 text-amber-600" />
+              <AlertDescription className="text-amber-900 dark:text-amber-200 font-medium">
+                Educational information only. When in doubt, contact your veterinarian.
+              </AlertDescription>
+            </Alert>
+          </div>
 
-      <main className="flex-1 container mx-auto px-4 py-8 md:py-12">
-        <header className="text-center mb-8 md:mb-12">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-primary">
-            Toxic Food Scanner
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-            Search our database of 50+ common foods to check their toxicity level for pets
-          </p>
-        </header>
-
-        <Alert className="mb-8 border-destructive bg-destructive/10">
-          <AlertTriangle className="h-5 w-5 text-destructive" />
-          <AlertDescription className="text-sm md:text-base">
-            <strong className="font-semibold">Important Disclaimer:</strong> This tool is for educational purposes only. 
-            Always contact your veterinarian immediately for actual poisoning cases or emergencies. 
-            Call the Pet Poison Helpline at 855-764-7661 for immediate assistance.
-          </AlertDescription>
-        </Alert>
-
-        <section className="mb-8">
-          <Card>
+          {/* Search Interface */}
+          <Card className="mb-8 shadow-lg">
             <CardHeader>
-              <CardTitle>Check Food Safety</CardTitle>
-              <CardDescription>
-                Search by name, upload an image, or enter ingredients list
-              </CardDescription>
+              <CardTitle className="text-2xl text-center">Search Food Name</CardTitle>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="search" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="search">
-                    <Search className="h-4 w-4 mr-2" />
-                    Search
-                  </TabsTrigger>
-                  <TabsTrigger value="image">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload Image
-                  </TabsTrigger>
-                  <TabsTrigger value="ingredients">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Ingredients List
-                  </TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="search" className="space-y-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
-                    <Input
-                      type="text"
-                      placeholder="Search for foods (e.g., chocolate, grapes, onions)..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 text-base md:text-lg h-12"
-                    />
-                  </div>
-                </TabsContent>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                  placeholder="Search food name... (e.g., chocolate, grapes, chicken)"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 text-lg h-14"
+                />
+              </div>
 
-                <TabsContent value="image" className="space-y-4">
-                  <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                      id="image-upload"
-                    />
-                    <label htmlFor="image-upload" className="cursor-pointer">
-                      <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Click to upload an image of the food or product label
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Max file size: 10MB
-                      </p>
-                    </label>
-                  </div>
-                  
-                  {imagePreview && (
-                    <div className="space-y-4">
-                      <img 
-                        src={imagePreview} 
-                        alt="Uploaded food" 
-                        className="max-h-64 mx-auto rounded-lg"
-                      />
-                      <Button 
-                        onClick={analyzeImage} 
-                        disabled={isAnalyzing}
-                        className="w-full"
-                      >
-                        {isAnalyzing ? "Analyzing..." : "Analyze Image with AI"}
-                      </Button>
-                      
-                      {imageAnalysis && (
-                        <Alert>
-                          <AlertTriangle className="h-4 w-4" />
-                          <AlertDescription>
-                            <strong>AI Analysis Results:</strong>
-                            <div className="mt-3 space-y-2">
-                              {(() => {
-                                try {
-                                  // Remove markdown code blocks if present
-                                  const cleanJson = imageAnalysis.replace(/```json\n?|\n?```/g, '').trim();
-                                  const results = JSON.parse(cleanJson);
-                                  
-                                  const toxicItems = results.filter((item: any) => item.isToxic);
-                                  const safeItems = results.filter((item: any) => !item.isToxic);
-                                  
-                                  return (
-                                    <>
-                                      {toxicItems.length > 0 && (
-                                        <div className="p-3 bg-destructive/10 rounded-md">
-                                          <p className="font-semibold text-destructive mb-2">⚠️ Toxic Items Detected:</p>
-                                          {toxicItems.map((item: any, idx: number) => (
-                                            <div key={idx} className="ml-4 mb-2">
-                                              <p className="font-medium">{item.ingredient}</p>
-                                              {item.toxicityLevel && (
-                                                <Badge variant="destructive" className="mt-1">
-                                                  {item.toxicityLevel} Toxicity
-                                                </Badge>
-                                              )}
-                                              {item.reason && (
-                                                <p className="text-sm mt-1">{item.reason}</p>
-                                              )}
-                                            </div>
-                                          ))}
-                                        </div>
-                                      )}
-                                      
-                                      {safeItems.length > 0 && (
-                                        <div className="p-3 bg-secondary/50 rounded-md">
-                                          <p className="font-semibold mb-2">✓ Safe Items:</p>
-                                          <ul className="ml-4 list-disc">
-                                            {safeItems.map((item: any, idx: number) => (
-                                              <li key={idx}>{item.ingredient}</li>
-                                            ))}
-                                          </ul>
-                                        </div>
-                                      )}
-                                      
-                                      {toxicItems.length === 0 && (
-                                        <p className="text-green-600 font-medium">
-                                          ✓ No toxic ingredients detected in this image!
-                                        </p>
-                                      )}
-                                    </>
-                                  );
-                                } catch (e) {
-                                  return <p className="text-sm">{imageAnalysis}</p>;
-                                }
-                              })()}
-                            </div>
-                          </AlertDescription>
-                        </Alert>
-                      )}
-                    </div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="ingredients" className="space-y-4">
-                  <Textarea
-                    placeholder="Enter ingredients separated by commas or new lines&#10;Example:&#10;chicken, rice, carrots, peas&#10;or&#10;chocolate&#10;grapes&#10;onions"
-                    value={ingredientsText}
-                    onChange={(e) => setIngredientsText(e.target.value)}
-                    className="min-h-32 text-base"
-                  />
-                  <Button onClick={analyzeIngredients} className="w-full">
-                    Analyze Ingredients
-                  </Button>
-                </TabsContent>
-              </Tabs>
-
-              {searchQuery && filteredFoods.length === 0 && (
-                <p className="text-center text-muted-foreground mt-6">
-                  No results found. Try searching for common foods like chocolate, grapes, or onions.
-                </p>
-              )}
+              {/* Popular Searches */}
+              <div className="mt-6">
+                <p className="text-sm text-muted-foreground mb-3">Popular searches:</p>
+                <div className="flex flex-wrap gap-2">
+                  {POPULAR_SEARCHES.map((search) => (
+                    <Button
+                      key={search.name}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePopularSearch(search.name)}
+                      className="hover:bg-primary hover:text-primary-foreground transition-colors"
+                    >
+                      {search.emoji} {search.name}
+                    </Button>
+                  ))}
+                </div>
+              </div>
             </CardContent>
           </Card>
-        </section>
 
-        {filteredFoods.length > 0 && (
-          <section className="space-y-4">
-            <h2 className="text-2xl font-semibold mb-4">
-              Search Results ({filteredFoods.length})
-            </h2>
-
-            {filteredFoods.map((food) => (
-              <Card key={food.name} className="overflow-hidden">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <CardTitle className="text-xl md:text-2xl">{food.name}</CardTitle>
-                      {food.alternativeNames && (
-                        <CardDescription className="mt-1">
-                          Also known as: {food.alternativeNames.join(", ")}
-                        </CardDescription>
-                      )}
+          {/* Results Section */}
+          {filteredFoods.length > 0 && (
+            <div className="space-y-6 mb-12">
+              {filteredFoods.map((food, index) => (
+                <Card key={index} className={`shadow-lg ${food.safe ? 'border-green-500' : 'border-red-500'} border-2`}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <CardTitle className="text-2xl mb-2">{food.name}</CardTitle>
+                        {food.alternativeNames && food.alternativeNames.length > 0 && (
+                          <p className="text-sm text-muted-foreground italic">
+                            Also known as: {food.alternativeNames.join(", ")}
+                          </p>
+                        )}
+                      </div>
+                      <Badge
+                        variant={food.safe ? "default" : "destructive"}
+                        className={`text-lg px-4 py-2 ${food.safe ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
+                      >
+                        {food.safe ? (
+                          <>
+                            <Check className="mr-2 h-5 w-5" />
+                            SAFE
+                          </>
+                        ) : (
+                          <>
+                            <AlertTriangle className="mr-2 h-5 w-5" />
+                            TOXIC
+                          </>
+                        )}
+                      </Badge>
                     </div>
-                    <Badge
-                      variant={getToxicityColor(food.toxicityLevel)}
-                      className="text-sm md:text-base px-3 py-1 whitespace-nowrap"
-                    >
-                      {food.toxicityLevel} Risk
-                    </Badge>
-                  </div>
-                </CardHeader>
+                  </CardHeader>
 
-                <CardContent className="space-y-4">
-                  <div>
-                    <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
-                      <AlertTriangle className="h-5 w-5 text-destructive" />
-                      Possible Symptoms
-                    </h3>
-                    <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                      {food.symptoms.map((symptom, index) => (
-                        <li key={index}>{symptom}</li>
-                      ))}
-                    </ul>
-                  </div>
+                  <CardContent>
+                    {!food.safe ? (
+                      /* TOXIC FOOD DISPLAY */
+                      <div className="space-y-6">
+                        {/* Risk Level */}
+                        {food.toxicityLevel && (
+                          <div>
+                            <h3 className="font-semibold text-lg mb-2">Risk Level:</h3>
+                            <Badge variant={getToxicityBadge(food.toxicityLevel).variant} className="text-base px-4 py-2">
+                              {getToxicityBadge(food.toxicityLevel).icon} {food.toxicityLevel.toUpperCase()}
+                            </Badge>
+                          </div>
+                        )}
 
-                  <div className="bg-primary/5 rounded-lg p-4">
-                    <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
-                      <Clock className="h-5 w-5 text-primary" />
-                      Immediate Actions
-                    </h3>
-                    <ol className="list-decimal list-inside space-y-1">
-                      {food.immediateActions.map((action, index) => (
-                        <li key={index} className="text-foreground">{action}</li>
-                      ))}
-                    </ol>
-                  </div>
+                        {/* Toxic Component */}
+                        {food.toxicComponent && (
+                          <div>
+                            <h3 className="font-semibold text-lg mb-2">Toxic Component:</h3>
+                            <p className="text-muted-foreground">{food.toxicComponent}</p>
+                          </div>
+                        )}
 
-                  <div className="bg-destructive/10 rounded-lg p-4 border border-destructive/20">
-                    <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
-                      <Phone className="h-5 w-5 text-destructive" />
-                      Emergency Contacts
-                    </h3>
-                    <ul className="space-y-2">
-                      <li>
-                        <strong>Pet Poison Helpline:</strong>{" "}
-                        <a href="tel:855-764-7661" className="text-primary hover:underline">
-                          855-764-7661
-                        </a>
-                      </li>
-                      <li>
-                        <strong>ASPCA Poison Control:</strong>{" "}
-                        <a href="tel:888-426-4435" className="text-primary hover:underline">
-                          888-426-4435
-                        </a>
-                      </li>
-                      <li>
-                        <strong>Your Veterinarian:</strong> Contact immediately for emergency care
-                      </li>
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </section>
-        )}
+                        {/* Why It's Dangerous */}
+                        {food.danger && (
+                          <div className="bg-red-50 dark:bg-red-950/20 p-4 rounded-lg border border-red-200 dark:border-red-900">
+                            <h3 className="font-semibold text-lg mb-2 text-red-900 dark:text-red-100">WHY IT'S DANGEROUS:</h3>
+                            <p className="text-red-800 dark:text-red-200">{food.danger}</p>
+                          </div>
+                        )}
 
-        {ingredientMatches.length > 0 && (
-          <section className="space-y-4">
-            <h2 className="text-2xl font-semibold mb-4">
-              Ingredient Analysis Results ({ingredientMatches.length} toxic ingredients found)
-            </h2>
+                        {/* Symptoms */}
+                        {food.symptoms && food.symptoms.length > 0 && (
+                          <div>
+                            <h3 className="font-semibold text-lg mb-3">SYMPTOMS IF EATEN:</h3>
+                            <ul className="space-y-2">
+                              {food.symptoms.map((symptom, i) => (
+                                <li key={i} className="flex items-start">
+                                  <span className="text-red-600 mr-2">•</span>
+                                  <span>{symptom}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
 
-            {ingredientMatches.map((food) => (
-              <Card key={food.name} className="overflow-hidden">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <CardTitle className="text-xl md:text-2xl">{food.name}</CardTitle>
-                      {food.alternativeNames && (
-                        <CardDescription className="mt-1">
-                          Also known as: {food.alternativeNames.join(", ")}
-                        </CardDescription>
-                      )}
-                    </div>
-                    <Badge
-                      variant={getToxicityColor(food.toxicityLevel)}
-                      className="text-sm md:text-base px-3 py-1 whitespace-nowrap"
-                    >
-                      {food.toxicityLevel} Risk
-                    </Badge>
-                  </div>
-                </CardHeader>
+                        {/* What To Do */}
+                        {food.whatToDo && food.whatToDo.length > 0 && (
+                          <div className="bg-amber-50 dark:bg-amber-950/20 p-4 rounded-lg border border-amber-200 dark:border-amber-900">
+                            <h3 className="font-semibold text-lg mb-3 text-amber-900 dark:text-amber-100">WHAT TO DO IF YOUR PET ATE THIS:</h3>
+                            <ul className="space-y-2">
+                              {food.whatToDo.map((action, i) => (
+                                <li key={i} className="flex items-start text-amber-900 dark:text-amber-100">
+                                  <span className="mr-2">→</span>
+                                  <span>{action}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
 
-                <CardContent className="space-y-4">
-                  <div>
-                    <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
-                      <AlertTriangle className="h-5 w-5 text-destructive" />
-                      Possible Symptoms
-                    </h3>
-                    <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                      {food.symptoms.map((symptom, index) => (
-                        <li key={index}>{symptom}</li>
-                      ))}
-                    </ul>
-                  </div>
+                        {/* Emergency Contacts */}
+                        <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg border border-blue-200 dark:border-blue-900">
+                          <h3 className="font-semibold text-lg mb-3 flex items-center text-blue-900 dark:text-blue-100">
+                            <Phone className="mr-2 h-5 w-5" />
+                            EMERGENCY CONTACTS:
+                          </h3>
+                          <div className="space-y-2 text-blue-800 dark:text-blue-200">
+                            <p>• Pet Poison Helpline: <strong>(855) 764-7661</strong> (fee may apply)</p>
+                            <p>• ASPCA Animal Poison Control: <strong>(888) 426-4435</strong> (fee may apply)</p>
+                          </div>
+                        </div>
 
-                  <div className="bg-primary/5 rounded-lg p-4">
-                    <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
-                      <Clock className="h-5 w-5 text-primary" />
-                      Immediate Actions
-                    </h3>
-                    <ol className="list-decimal list-inside space-y-1">
-                      {food.immediateActions.map((action, index) => (
-                        <li key={index} className="text-foreground">{action}</li>
-                      ))}
-                    </ol>
-                  </div>
+                        {/* Action Button */}
+                        <div className="pt-4">
+                          <Button asChild className="w-full sm:w-auto">
+                            <Link to="/tools/vet-finder">Find Emergency Vet Near Me</Link>
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      /* SAFE FOOD DISPLAY */
+                      <div className="space-y-6">
+                        <div className="bg-green-50 dark:bg-green-950/20 p-4 rounded-lg border border-green-200 dark:border-green-900">
+                          <h3 className="font-semibold text-lg mb-2 text-green-900 dark:text-green-100">
+                            ✅ GENERALLY SAFE FOR DOGS & CATS
+                          </h3>
+                        </div>
 
-                  <div className="bg-destructive/10 rounded-lg p-4 border border-destructive/20">
-                    <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
-                      <Phone className="h-5 w-5 text-destructive" />
-                      Emergency Contacts
-                    </h3>
-                    <ul className="space-y-2">
-                      <li>
-                        <strong>Pet Poison Helpline:</strong>{" "}
-                        <a href="tel:855-764-7661" className="text-primary hover:underline">
-                          855-764-7661
-                        </a>
-                      </li>
-                      <li>
-                        <strong>ASPCA Poison Control:</strong>{" "}
-                        <a href="tel:888-426-4435" className="text-primary hover:underline">
-                          888-426-4435
-                        </a>
-                      </li>
-                      <li>
-                        <strong>Your Veterinarian:</strong> Contact immediately for emergency care
-                      </li>
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </section>
-        )}
+                        {/* Nutritional Benefits */}
+                        {food.benefits && (
+                          <div>
+                            <h3 className="font-semibold text-lg mb-2">NUTRITIONAL BENEFITS:</h3>
+                            <p className="text-muted-foreground">{food.benefits}</p>
+                          </div>
+                        )}
 
-        {!searchQuery && ingredientMatches.length === 0 && (
-          <section className="mt-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>How to Use This Tool</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <ol className="list-decimal list-inside space-y-2">
-                  <li>Enter the name of a food item in the search box above</li>
-                  <li>Review the toxicity level and possible symptoms</li>
-                  <li>Follow the immediate actions if your pet has ingested the food</li>
-                  <li>Contact your veterinarian or emergency vet immediately if needed</li>
-                </ol>
+                        {/* Serving Suggestions */}
+                        {food.servingSuggestions && food.servingSuggestions.length > 0 && (
+                          <div>
+                            <h3 className="font-semibold text-lg mb-3">SERVING SUGGESTIONS:</h3>
+                            <ul className="space-y-2">
+                              {food.servingSuggestions.map((suggestion, i) => (
+                                <li key={i} className="flex items-start">
+                                  <span className="text-green-600 mr-2">•</span>
+                                  <span>{suggestion}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
 
-                <Alert>
-                  <AlertDescription>
-                    Our database includes 50+ common toxic foods including chocolate, grapes, onions, 
-                    xylitol, avocados, macadamia nuts, and many more. Start typing to see results instantly.
-                  </AlertDescription>
-                </Alert>
+                        {/* Precautions */}
+                        {food.precautions && food.precautions.length > 0 && (
+                          <div className="bg-amber-50 dark:bg-amber-950/20 p-4 rounded-lg border border-amber-200 dark:border-amber-900">
+                            <h3 className="font-semibold text-lg mb-3 text-amber-900 dark:text-amber-100">PRECAUTIONS:</h3>
+                            <ul className="space-y-2">
+                              {food.precautions.map((precaution, i) => (
+                                <li key={i} className="flex items-start text-amber-900 dark:text-amber-100">
+                                  <span className="text-amber-600 mr-2">•</span>
+                                  <span>{precaution}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Note */}
+                        <Alert>
+                          <AlertDescription className="text-sm">
+                            <strong>Note:</strong> While generally safe, every pet is different. Introduce new foods gradually and watch for reactions.
+                          </AlertDescription>
+                        </Alert>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* No Results */}
+          {searchQuery && filteredFoods.length === 0 && (
+            <Card className="text-center py-12">
+              <CardContent>
+                <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                <CardTitle className="mb-2">No results found</CardTitle>
+                <CardDescription>
+                  We couldn't find "{searchQuery}" in our database. When in doubt, contact your veterinarian.
+                </CardDescription>
               </CardContent>
             </Card>
-          </section>
-        )}
+          )}
+
+          {/* Premium Feature Banner */}
+          <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-2 border-blue-200 dark:border-blue-800 mb-8">
+            <CardContent className="py-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-center sm:text-left">
+                  <p className="text-lg font-semibold mb-1">
+                    💎 Premium: Get personalized alerts based on YOUR pet's breed, age, and health conditions
+                  </p>
+                </div>
+                <Button asChild variant="default" size="lg" className="whitespace-nowrap">
+                  <Link to="/premium">Upgrade Now</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Browse by Category */}
+          <div>
+            <h2 className="text-2xl font-bold mb-6 text-center">Browse by Category</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {CATEGORIES.map((category) => (
+                <Button
+                  key={category.value}
+                  variant={selectedCategory === category.value ? "default" : "outline"}
+                  size="lg"
+                  onClick={() => handleCategoryClick(category.value)}
+                  className="h-auto py-6 flex flex-col gap-2 hover:scale-105 transition-transform"
+                >
+                  <span className="text-3xl">{category.emoji}</span>
+                  <span className="text-sm font-medium">{category.name}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+        </div>
       </main>
 
       <Footer />
