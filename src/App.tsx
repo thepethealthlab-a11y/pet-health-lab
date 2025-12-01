@@ -51,9 +51,11 @@ const App = () => (
           <Route path="/gdpr" element={<GDPR />} />
           <Route path="/tools/symptom-checker" element={<SymptomChecker />} />
           <Route path="/tools/toxic-food-scanner" element={<ToxicFoodScanner />} />
+          <Route path="/tools/toxic-food" element={<ToxicFoodScanner />} />
           <Route path="/tools/food-scanner" element={<ToxicFoodScanner />} />
           <Route path="/tools/food-planner" element={<FoodPlanner />} />
           <Route path="/tools/vaccine-scheduler" element={<VaccineScheduler />} />
+          <Route path="/tools/vaccine-tracker" element={<VaccineScheduler />} />
           <Route path="/tools/cost-calculator" element={<PetCostCalculator />} />
           <Route path="/tools/pet-behavior-problem-solver" element={<PetBehaviorSolver />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
