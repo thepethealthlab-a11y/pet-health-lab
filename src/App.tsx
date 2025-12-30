@@ -23,6 +23,7 @@ import FoodPlanner from "./pages/FoodPlanner";
 import VaccineScheduler from "./pages/VaccineScheduler";
 import PetCostCalculator from "./pages/PetCostCalculator";
 import PetBehaviorSolver from "./pages/PetBehaviorSolver";
+import ExpenseTracker from "./pages/ExpenseTracker";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -58,6 +59,7 @@ const App = () => (
           <Route path="/tools/vaccine-tracker" element={<VaccineScheduler />} />
           <Route path="/tools/cost-calculator" element={<PetCostCalculator />} />
           <Route path="/tools/pet-behavior-problem-solver" element={<PetBehaviorSolver />} />
+          <Route path="/tools/expense-tracker" element={<ExpenseTracker />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
