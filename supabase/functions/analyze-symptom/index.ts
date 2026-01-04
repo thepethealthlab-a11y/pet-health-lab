@@ -1,23 +1,59 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsPrelight } from "../_shared/cors.ts";
+import { authenticateRequest } from "../_shared/auth.ts";
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  // Handle CORS preflight
+  const corsResponse = handleCorsPrelight(req);
+  if (corsResponse) return corsResponse;
+
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
 
   try {
-    const { petType, symptoms, age, breed, duration } = await req.json();
+    // Authenticate the request
+    const user = await authenticateRequest(req);
+    console.log("Authenticated user:", user.id);
+
+    // Parse and validate input
+    const body = await req.json();
+    const { petType, symptoms, age, breed, duration } = body;
+
+    // Input validation
+    if (!petType || typeof petType !== 'string') {
+      return new Response(
+        JSON.stringify({ error: "Pet type is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!symptoms || typeof symptoms !== 'string') {
+      return new Response(
+        JSON.stringify({ error: "Symptoms description is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (symptoms.length > 3000) {
+      return new Response(
+        JSON.stringify({ error: "Symptoms description too long (max 3000 characters)" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const validPetTypes = ['dog', 'cat', 'bird', 'rabbit', 'other'];
+    if (!validPetTypes.includes(petType.toLowerCase())) {
+      return new Response(
+        JSON.stringify({ error: "Invalid pet type" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     
     console.log("Analyzing symptoms for:", { petType, age, breed, duration });
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+      throw new Error("Service configuration error");
     }
 
     const systemPrompt = `You are a veterinary education assistant. Provide educational information about pet symptoms.
@@ -110,30 +146,24 @@ Provide educational information about these symptoms including:
       if (response.status === 429) {
         console.error("Rate limit exceeded");
         return new Response(
-          JSON.stringify({ error: "Rate limits exceeded, please try again later." }), 
-          {
-            status: 429,
-            headers: { ...corsHeaders, "Content-Type": "application/json" }
-          }
+          JSON.stringify({ error: "Service temporarily busy. Please try again later." }), 
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       if (response.status === 402) {
         console.error("Payment required");
         return new Response(
-          JSON.stringify({ error: "Payment required, please add funds to your Lovable AI workspace." }), 
-          {
-            status: 402,
-            headers: { ...corsHeaders, "Content-Type": "application/json" }
-          }
+          JSON.stringify({ error: "Service temporarily unavailable." }), 
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       const errorText = await response.text();
       console.error("AI gateway error:", response.status, errorText);
-      throw new Error(`AI gateway error: ${response.status}`);
+      throw new Error("AI service error");
     }
 
     const data = await response.json();
-    console.log("AI response received");
+    console.log("AI response received for user:", user.id);
     
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall) {
@@ -148,14 +178,18 @@ Provide educational information about these symptoms including:
 
   } catch (error) {
     console.error("Error in analyze-symptom function:", error);
+    
+    // Check if it's an auth error
+    if (error instanceof Error && error.message.includes('Authentication')) {
+      return new Response(
+        JSON.stringify({ error: "Authentication required" }), 
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
     return new Response(
-      JSON.stringify({ 
-        error: error instanceof Error ? error.message : "Unknown error occurred" 
-      }), 
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      }
+      JSON.stringify({ error: "An error occurred. Please try again." }), 
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

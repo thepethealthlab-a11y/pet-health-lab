@@ -9,6 +9,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+
+const loginSchema = z.object({
+  email: z.string().trim().email("Please enter a valid email address").max(255, "Email too long"),
+  password: z.string().min(1, "Password is required").max(128, "Password too long"),
+});
 
 const Login = () => {
   const navigate = useNavigate();
@@ -16,6 +22,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -27,19 +34,37 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
+
+    // Validate input
+    const result = loginSchema.safeParse({ email, password });
+    if (!result.success) {
+      const fieldErrors: { email?: string; password?: string } = {};
+      result.error.errors.forEach((error) => {
+        if (error.path[0] === 'email') fieldErrors.email = error.message;
+        if (error.path[0] === 'password') fieldErrors.password = error.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+
     setIsLoading(true);
 
     const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+      email: result.data.email,
+      password: result.data.password,
     });
 
     setIsLoading(false);
 
     if (error) {
+      let errorMessage = error.message;
+      if (error.message.includes('Invalid login credentials')) {
+        errorMessage = "Invalid email or password. Please check your credentials and try again.";
+      }
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Login Failed",
+        description: errorMessage,
         variant: "destructive",
       });
     } else {
@@ -81,8 +106,12 @@ const Login = () => {
                       placeholder="you@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      className={errors.email ? "border-destructive" : ""}
                       required
                     />
+                    {errors.email && (
+                      <p className="text-sm text-destructive">{errors.email}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -94,8 +123,12 @@ const Login = () => {
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      className={errors.password ? "border-destructive" : ""}
                       required
                     />
+                    {errors.password && (
+                      <p className="text-sm text-destructive">{errors.password}</p>
+                    )}
                   </div>
                   <Button 
                     variant="hero" 

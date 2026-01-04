@@ -10,6 +10,17 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+
+const signupSchema = z.object({
+  email: z.string().trim().email("Please enter a valid email address").max(255, "Email too long"),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .max(128, "Password too long")
+    .regex(/[A-Za-z]/, "Password must contain at least one letter")
+    .regex(/[0-9]/, "Password must contain at least one number"),
+  displayName: z.string().trim().max(100, "Display name too long").optional(),
+});
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -19,6 +30,7 @@ const Signup = () => {
   const [displayName, setDisplayName] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string; displayName?: string }>({});
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -30,6 +42,7 @@ const Signup = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
 
     if (!agreedToTerms) {
       toast({
@@ -40,24 +53,28 @@ const Signup = () => {
       return;
     }
 
-    if (password.length < 8) {
-      toast({
-        title: "Invalid Password",
-        description: "Password must be at least 8 characters long.",
-        variant: "destructive",
+    // Validate input
+    const result = signupSchema.safeParse({ email, password, displayName: displayName || undefined });
+    if (!result.success) {
+      const fieldErrors: { email?: string; password?: string; displayName?: string } = {};
+      result.error.errors.forEach((error) => {
+        if (error.path[0] === 'email') fieldErrors.email = error.message;
+        if (error.path[0] === 'password') fieldErrors.password = error.message;
+        if (error.path[0] === 'displayName') fieldErrors.displayName = error.message;
       });
+      setErrors(fieldErrors);
       return;
     }
 
     setIsLoading(true);
 
     const { error } = await supabase.auth.signUp({
-      email,
-      password,
+      email: result.data.email,
+      password: result.data.password,
       options: {
         emailRedirectTo: `${window.location.origin}/community`,
         data: {
-          display_name: displayName || email.split('@')[0],
+          display_name: result.data.displayName || result.data.email.split('@')[0],
         }
       }
     });
@@ -65,9 +82,13 @@ const Signup = () => {
     setIsLoading(false);
 
     if (error) {
+      let errorMessage = error.message;
+      if (error.message.includes('already registered')) {
+        errorMessage = "This email is already registered. Please sign in or use a different email.";
+      }
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Signup Failed",
+        description: errorMessage,
         variant: "destructive",
       });
     } else {
@@ -108,7 +129,11 @@ const Signup = () => {
                       placeholder="Your name"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
+                      className={errors.displayName ? "border-destructive" : ""}
                     />
+                    {errors.displayName && (
+                      <p className="text-sm text-destructive">{errors.displayName}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -119,8 +144,12 @@ const Signup = () => {
                       placeholder="you@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      className={errors.email ? "border-destructive" : ""}
                       required
                     />
+                    {errors.email && (
+                      <p className="text-sm text-destructive">{errors.email}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -131,9 +160,14 @@ const Signup = () => {
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      className={errors.password ? "border-destructive" : ""}
                       required
                     />
-                    <p className="text-xs text-muted-foreground">Must be at least 8 characters</p>
+                    {errors.password ? (
+                      <p className="text-sm text-destructive">{errors.password}</p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">At least 8 characters with a letter and number</p>
+                    )}
                   </div>
 
                   <div className="flex items-start space-x-2">

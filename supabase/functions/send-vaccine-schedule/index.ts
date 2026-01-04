@@ -1,12 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
+import { getCorsHeaders, handleCorsPrelight } from "../_shared/cors.ts";
+import { authenticateRequest } from "../_shared/auth.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
 
 interface VaccineEvent {
   name: string;
@@ -26,14 +23,75 @@ interface VaccineScheduleRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  // Handle CORS preflight
+  const corsResponse = handleCorsPrelight(req);
+  if (corsResponse) return corsResponse;
+
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
 
   try {
-    const { email, petType, breed, birthDate, country, schedule }: VaccineScheduleRequest = await req.json();
+    // Authenticate the request
+    const user = await authenticateRequest(req);
+    console.log("Authenticated user:", user.id);
 
-    console.log("Sending vaccine schedule to:", email);
+    const body: VaccineScheduleRequest = await req.json();
+    const { email, petType, breed, birthDate, country, schedule } = body;
+
+    // Input validation
+    if (!email || typeof email !== 'string') {
+      return new Response(
+        JSON.stringify({ error: "Valid email is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid email format" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!petType || typeof petType !== 'string') {
+      return new Response(
+        JSON.stringify({ error: "Pet type is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!birthDate || typeof birthDate !== 'string') {
+      return new Response(
+        JSON.stringify({ error: "Birth date is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!country || typeof country !== 'string') {
+      return new Response(
+        JSON.stringify({ error: "Country is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!schedule || !Array.isArray(schedule) || schedule.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "Vaccine schedule is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Limit schedule size
+    if (schedule.length > 50) {
+      return new Response(
+        JSON.stringify({ error: "Schedule too large" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log("Sending vaccine schedule to:", email, "for user:", user.id);
 
     // Build the email HTML
     const scheduleHTML = schedule.map((event) => {
@@ -128,19 +186,22 @@ const handler = async (req: Request): Promise<Response> => {
 
     return new Response(JSON.stringify({ success: true, data: emailResponse }), {
       status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders,
-      },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   } catch (error: any) {
     console.error("Error sending vaccine schedule email:", error);
+    
+    // Check if it's an auth error
+    if (error instanceof Error && error.message.includes('Authentication')) {
+      return new Response(
+        JSON.stringify({ error: "Authentication required" }), 
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
+      JSON.stringify({ error: "Failed to send email. Please try again." }),
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
 };
