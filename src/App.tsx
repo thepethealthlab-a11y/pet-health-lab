@@ -25,6 +25,7 @@ import PetCostCalculator from "./pages/PetCostCalculator";
 import PetBehaviorSolver from "./pages/PetBehaviorSolver";
 import ExpenseTracker from "./pages/ExpenseTracker";
 import CalorieCalculator from "./pages/CalorieCalculator";
+import LostPetGenerator from "./pages/LostPetGenerator";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -62,6 +63,8 @@ const App = () => (
           <Route path="/tools/pet-behavior-problem-solver" element={<PetBehaviorSolver />} />
           <Route path="/tools/expense-tracker" element={<ExpenseTracker />} />
           <Route path="/tools/calorie-calculator" element={<CalorieCalculator />} />
+          <Route path="/tools/lost-pet-generator" element={<LostPetGenerator />} />
+          <Route path="/tools/lost-pet-poster" element={<LostPetGenerator />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
