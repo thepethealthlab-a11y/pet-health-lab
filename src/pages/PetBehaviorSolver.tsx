@@ -1,259 +1,245 @@
 import { useState } from "react";
-import Navigation from "@/components/Navigation";
-import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useSEO } from "@/hooks/useSEO";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2, Lightbulb, AlertTriangle, Stethoscope } from "lucide-react";
+import { toast } from "sonner";
+import {
+  Loader2,
+  Lightbulb,
+  Stethoscope,
+  AlertTriangle,
+  ArrowRight,
+  RefreshCw,
+  Copy,
+  Check,
+} from "lucide-react";
+import ToolShell from "@/components/tools/ToolShell";
+import ToolStep from "@/components/tools/ToolStep";
+import ResultCard from "@/components/tools/ResultCard";
+import AuthGate from "@/components/tools/AuthGate";
+import { cn } from "@/lib/utils";
+
+interface BehaviorResult {
+  diagnosisSummary: string;
+  solutions: string[];
+  vetAdvice: string;
+}
+
+const PET_TYPES = [
+  { value: "dog", label: "Dog", icon: "🐕" },
+  { value: "cat", label: "Cat", icon: "🐈" },
+  { value: "bird", label: "Bird", icon: "🦜" },
+  { value: "rabbit", label: "Rabbit", icon: "🐰" },
+  { value: "other", label: "Other", icon: "🐾" },
+];
 
 const PetBehaviorSolver = () => {
   useSEO({
     title: "Pet Behavior Problem Solver | The Pet Health Lab",
-    description: "Understand why your pet acts out! Use our Pet Behavior Problem Solver to find causes, get expert tips, and fix common behavior issues in dogs, cats, and more.",
-    keywords: "pet behavior, dog behavior problems, cat behavior issues, pet training, behavior solutions, pet psychology",
+    description:
+      "Understand and resolve common pet behavior issues with structured AI-powered guidance.",
+    keywords: "pet behavior, dog behavior, cat behavior, pet training",
     canonical: "https://thepethealthlab.com/tools/pet-behavior-problem-solver",
-    schema: {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "Pet Behavior Problem Solver",
-      "applicationCategory": "HealthApplication",
-      "description": "AI-powered tool to analyze and solve pet behavior problems",
-    },
   });
 
   const [petType, setPetType] = useState("");
   const [petAge, setPetAge] = useState("");
   const [behaviorIssue, setBehaviorIssue] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [results, setResults] = useState<{
-    diagnosisSummary: string;
-    solutions: string[];
-    vetAdvice: string;
-  } | null>(null);
-  const { toast } = useToast();
+  const [results, setResults] = useState<BehaviorResult | null>(null);
+  const [copied, setCopied] = useState(false);
 
-  const petEmojis: Record<string, string> = {
-    dog: "🐕",
-    cat: "🐈",
-    bird: "🦜",
-    rabbit: "🐰",
-    other: "🐾",
-  };
-
-  const analyzeBehavior = async () => {
+  const analyze = async () => {
     if (!petType || !petAge || !behaviorIssue.trim()) {
-      toast({
-        title: "Missing information",
-        description: "Please fill in all fields before analyzing",
-        variant: "destructive",
-      });
+      toast.error("Please complete all three steps.");
       return;
     }
-
     setIsAnalyzing(true);
     setResults(null);
-
     try {
-      const { data, error } = await supabase.functions.invoke('analyze-pet-behavior', {
-        body: { petType, petAge, behaviorIssue }
+      const { data, error } = await supabase.functions.invoke("analyze-pet-behavior", {
+        body: { petType, petAge, behaviorIssue },
       });
-
       if (error) throw error;
-
       if (data?.analysis) {
-        // Parse the JSON response from AI
-        const cleanJson = data.analysis.replace(/```json\n?|\n?```/g, '').trim();
-        const parsedResults = JSON.parse(cleanJson);
-        setResults(parsedResults);
-        toast({
-          title: "Analysis complete",
-          description: "Here's what we found about your pet's behavior",
-        });
+        const cleaned = data.analysis.replace(/```json\n?|\n?```/g, "").trim();
+        const parsed = JSON.parse(cleaned);
+        setResults(parsed);
+        toast.success("Analysis complete");
+        setTimeout(() => {
+          document.getElementById("results")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 80);
       }
-    } catch (error: any) {
-      console.error("Error analyzing behavior:", error);
-      toast({
-        title: "Analysis failed",
-        description: error.message || "Failed to analyze behavior. Please try again.",
-        variant: "destructive",
-      });
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.message || "Failed to analyse behaviour. Please try again.");
     } finally {
       setIsAnalyzing(false);
     }
   };
 
+  const handleReset = () => {
+    setPetType("");
+    setPetAge("");
+    setBehaviorIssue("");
+    setResults(null);
+  };
+
+  const handleCopy = async () => {
+    if (!results) return;
+    const text = `Diagnosis: ${results.diagnosisSummary}\n\nSolutions:\n${results.solutions.map((s, i) => `${i + 1}. ${s}`).join("\n")}\n\nWhen to consult a professional:\n${results.vetAdvice}`;
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast.success("Copied to clipboard");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
-      <Navigation />
-      
-      <main className="flex-1 container mx-auto px-4 py-8 mt-16">
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="text-5xl mb-4">🐾</div>
-            <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-              Pet Behavior Problem Solver
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              Understand and Fix Your Pet's Behavior
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Get AI-powered insights to help solve common pet behavior issues
-            </p>
-          </div>
-
-          {/* Input Form */}
-          <Card className="mb-8 backdrop-blur-sm bg-white/80">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <span className="text-2xl">🔍</span>
-                Tell Us About Your Pet
-              </CardTitle>
-              <CardDescription>
-                Provide details about your pet and their behavior issue
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="pet-type">Pet Type</Label>
-                  <Select value={petType} onValueChange={setPetType}>
-                    <SelectTrigger id="pet-type">
-                      <SelectValue placeholder="Select pet type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="dog">🐕 Dog</SelectItem>
-                      <SelectItem value="cat">🐈 Cat</SelectItem>
-                      <SelectItem value="bird">🦜 Bird</SelectItem>
-                      <SelectItem value="rabbit">🐰 Rabbit</SelectItem>
-                      <SelectItem value="other">🐾 Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="pet-age">Pet Age</Label>
-                  <Select value={petAge} onValueChange={setPetAge}>
-                    <SelectTrigger id="pet-age">
-                      <SelectValue placeholder="Select age group" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="puppy-kitten">Puppy/Kitten (0-1 year)</SelectItem>
-                      <SelectItem value="young-adult">Young Adult (1-3 years)</SelectItem>
-                      <SelectItem value="adult">Adult (3-7 years)</SelectItem>
-                      <SelectItem value="senior">Senior (7+ years)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+    <ToolShell
+      eyebrow="AI · Behaviour"
+      title="Pet Behaviour Problem Solver"
+      subtitle="Tell us what your pet is doing — get a structured cause, three actionable solutions, and a clear escalation signal."
+      disclaimer="Educational guidance only. Consult a certified animal behaviourist for persistent or aggressive behaviour."
+    >
+      <AuthGate
+        toolName="the Behaviour Solver"
+        reason="Sign in so we can keep a private log of your pet's behaviour history."
+      >
+        {!results ? (
+          <div className="space-y-5">
+            <ToolStep number={1} title="Which pet?" complete={!!petType}>
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                {PET_TYPES.map((p) => (
+                  <button
+                    key={p.value}
+                    type="button"
+                    onClick={() => setPetType(p.value)}
+                    className={cn(
+                      "rounded-xl border p-4 text-center transition-all",
+                      petType === p.value
+                        ? "border-primary bg-primary/5 shadow-glow"
+                        : "border-hairline hover:border-foreground/30 hover:-translate-y-0.5"
+                    )}
+                    style={petType !== p.value ? { borderColor: "hsl(var(--hairline))" } : undefined}
+                  >
+                    <div className="text-2xl mb-1.5">{p.icon}</div>
+                    <div className="text-xs font-medium text-foreground">{p.label}</div>
+                  </button>
+                ))}
               </div>
+            </ToolStep>
 
+            <ToolStep number={2} title="Life stage" complete={!!petAge}>
               <div className="space-y-2">
-                <Label htmlFor="behavior-issue">Behavior Issue</Label>
-                <Textarea
-                  id="behavior-issue"
-                  placeholder="Describe your pet's behavior problem… (e.g., excessive barking, scratching furniture, not using litter box, biting, anxiety)"
-                  value={behaviorIssue}
-                  onChange={(e) => setBehaviorIssue(e.target.value)}
-                  className="min-h-[120px]"
-                />
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">Age group</Label>
+                <Select value={petAge} onValueChange={setPetAge}>
+                  <SelectTrigger><SelectValue placeholder="Select age group" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="puppy-kitten">Puppy/Kitten (0–1 yr)</SelectItem>
+                    <SelectItem value="young-adult">Young Adult (1–3 yrs)</SelectItem>
+                    <SelectItem value="adult">Adult (3–7 yrs)</SelectItem>
+                    <SelectItem value="senior">Senior (7+ yrs)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+            </ToolStep>
 
-              <Button 
-                onClick={analyzeBehavior} 
-                disabled={isAnalyzing}
-                className="w-full"
-                size="lg"
-              >
-                {isAnalyzing ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Analyzing Behavior...
-                  </>
-                ) : (
-                  <>
-                    <Lightbulb className="mr-2 h-5 w-5" />
-                    Analyze Behavior
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
+            <ToolStep
+              number={3}
+              title="Describe the behaviour"
+              description="When does it happen? How often? Any triggers you've noticed?"
+              complete={behaviorIssue.trim().length > 10}
+            >
+              <Textarea
+                placeholder="e.g. My cat has started scratching the sofa, mostly in the evening when we're not home."
+                value={behaviorIssue}
+                onChange={(e) => setBehaviorIssue(e.target.value)}
+                rows={5}
+                className="resize-none border-hairline"
+                style={{ borderColor: "hsl(var(--hairline))" }}
+              />
+            </ToolStep>
 
-          {/* Results */}
-          {results && (
-            <div className="space-y-6 animate-in fade-in-50 duration-500">
-              {/* Diagnosis Summary */}
-              <Card className="backdrop-blur-sm bg-white/80">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <span className="text-2xl">{petEmojis[petType] || "🐾"}</span>
-                    Diagnosis Summary
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {results.diagnosisSummary}
-                  </p>
-                </CardContent>
-              </Card>
+            <Button
+              onClick={analyze}
+              disabled={isAnalyzing}
+              size="lg"
+              className="w-full h-14 text-base shadow-glow"
+            >
+              {isAnalyzing ? (
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Analysing behaviour…
+                </>
+              ) : (
+                <>
+                  Solve this behaviour
+                  <ArrowRight className="h-5 w-5 ml-2" />
+                </>
+              )}
+            </Button>
+          </div>
+        ) : (
+          <div id="results" className="space-y-5 animate-fade-in">
+            <ResultCard title="What's likely going on" icon={<Lightbulb className="h-5 w-5" />}>
+              <p>{results.diagnosisSummary}</p>
+            </ResultCard>
 
-              {/* Solutions */}
-              <Card className="backdrop-blur-sm bg-white/80">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Lightbulb className="h-6 w-6 text-primary" />
-                    Top 3 Solutions
-                  </CardTitle>
-                  <CardDescription>
-                    Practical tips to help fix this behavior issue
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {results.solutions.map((solution, index) => (
-                      <div key={index} className="flex gap-3">
-                        <Badge className="h-6 w-6 rounded-full flex items-center justify-center shrink-0">
-                          {index + 1}
-                        </Badge>
-                        <p className="text-muted-foreground leading-relaxed">
-                          {solution}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+            <ResultCard title="Three actionable solutions" tone="info">
+              <ol className="space-y-4">
+                {results.solutions.map((s, i) => (
+                  <li key={i} className="flex gap-4">
+                    <span className="shrink-0 h-8 w-8 rounded-full bg-primary text-primary-foreground text-sm font-medium flex items-center justify-center">
+                      {i + 1}
+                    </span>
+                    <p className="pt-1">{s}</p>
+                  </li>
+                ))}
+              </ol>
+            </ResultCard>
 
-              {/* Vet Advice */}
-              <Alert className="backdrop-blur-sm bg-amber-50/80 border-amber-200">
-                <Stethoscope className="h-5 w-5 text-amber-600" />
-                <AlertDescription>
-                  <strong className="text-amber-900">When to See a Vet or Trainer:</strong>
-                  <p className="mt-2 text-amber-800">{results.vetAdvice}</p>
-                </AlertDescription>
-              </Alert>
+            <ResultCard
+              title="When to escalate"
+              icon={<Stethoscope className="h-5 w-5" />}
+              tone="warning"
+            >
+              <p>{results.vetAdvice}</p>
+            </ResultCard>
 
-              {/* Disclaimer */}
-              <Alert className="backdrop-blur-sm bg-blue-50/80 border-blue-200">
-                <AlertTriangle className="h-4 w-4 text-blue-600" />
-                <AlertDescription className="text-blue-800 text-sm">
-                  <strong>Important:</strong> Tips are for guidance only. Always consult your vet or a certified animal behaviorist for serious cases or if the behavior persists.
-                </AlertDescription>
-              </Alert>
+            <div
+              className="rounded-2xl border p-5 flex items-start gap-3 text-sm"
+              style={{ backgroundColor: "hsl(var(--surface-elevated))", borderColor: "hsl(var(--hairline))" }}
+            >
+              <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+              <p className="text-muted-foreground">
+                These tips are guidance only. For aggression, persistent issues, or sudden changes,
+                consult a vet or certified animal behaviourist.
+              </p>
             </div>
-          )}
-        </div>
-      </main>
 
-      <Footer />
-    </div>
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <Button onClick={handleReset} size="lg" variant="outline" className="flex-1">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                New analysis
+              </Button>
+              <Button onClick={handleCopy} size="lg" className="flex-1">
+                {copied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
+                {copied ? "Copied" : "Copy result"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </AuthGate>
+    </ToolShell>
   );
 };
 
