@@ -84,7 +84,7 @@ const PetCostCalculator = () => {
           </div>
         </ToolStep>
 
-        <ToolStep number={2} title="Details" active={!!petType} complete={canCalc}>
+        <ToolStep number={2} title="Details" active={!!petType} complete={!!canCalc}>
           <div className="grid sm:grid-cols-2 gap-5">
             {petType === "dog" && (
               <div className="space-y-2">
