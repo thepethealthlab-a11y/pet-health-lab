@@ -1,14 +1,12 @@
 import { useState } from "react";
-import Navigation from "@/components/Navigation";
-import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Textarea } from "@/components/ui/textarea";
-import { Heart, Pizza, Clock, Lightbulb, ShoppingBag, Utensils } from "lucide-react";
+import { Dog, Cat, Rabbit, Utensils, Pizza, Clock, ShoppingBag, Lightbulb } from "lucide-react";
+import ToolShell from "@/components/tools/ToolShell";
+import ToolStep from "@/components/tools/ToolStep";
+import ResultCard from "@/components/tools/ResultCard";
 import { useSEO } from "@/hooks/useSEO";
 
 interface DietResults {
@@ -20,495 +18,194 @@ interface DietResults {
   petName?: string;
 }
 
+const PET_TILES = [
+  { value: "Dog", icon: Dog },
+  { value: "Cat", icon: Cat },
+  { value: "Other", icon: Rabbit },
+];
+
 const FoodPlanner = () => {
   useSEO({
-    title: "Pet Food & Diet Planner | AI-Powered Pet Nutrition Calculator | ThePetHealthLab",
-    description: "AI-powered pet food calculator to find your dog's or cat's ideal daily diet, calories, and feeding guide. Calculate perfect portions for optimal pet health.",
-    keywords: "pet food calculator, dog diet planner, cat feeding chart, pet calorie calculator, pet nutrition guide, dog food portions, cat food portions",
+    title: "Pet Food & Diet Planner | ThePetHealthLab",
+    description: "Calculate your dog or cat's ideal daily diet, calories and feeding guide with our pet nutrition planner.",
     canonical: "https://thepethealthlab.com/tools/food-planner",
-    schema: {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "Pet Food & Diet Planner",
-      "description": "Calculate ideal daily diet, calories, and feeding guide for pets",
-      "url": "https://thepethealthlab.com/tools/food-planner",
-      "applicationCategory": "HealthApplication",
-    },
   });
 
-  const [petType, setPetType] = useState<string>("");
-  const [breed, setBreed] = useState<string>("");
-  const [ageYears, setAgeYears] = useState<string>("");
-  const [ageMonths, setAgeMonths] = useState<string>("");
-  const [weight, setWeight] = useState<string>("");
-  const [weightUnit, setWeightUnit] = useState<string>("kg");
-  const [activityLevel, setActivityLevel] = useState<string>("");
-  const [allergies, setAllergies] = useState<string>("");
+  const [petType, setPetType] = useState("");
+  const [breed, setBreed] = useState("");
+  const [ageYears, setAgeYears] = useState("");
+  const [ageMonths, setAgeMonths] = useState("");
+  const [weight, setWeight] = useState("");
+  const [weightUnit, setWeightUnit] = useState<"kg" | "lbs">("kg");
+  const [activity, setActivity] = useState("");
+  const [allergies, setAllergies] = useState("");
   const [results, setResults] = useState<DietResults | null>(null);
 
-  const calculateDiet = () => {
-    if (!petType || !weight || !activityLevel) return;
-
-    const weightInKg = weightUnit === "lbs" ? parseFloat(weight) * 0.453592 : parseFloat(weight);
-    const totalAgeMonths = (parseInt(ageYears || "0") * 12) + parseInt(ageMonths || "0");
-    
-    // Calculate Resting Energy Requirement (RER) = 70 * (weight in kg)^0.75
-    const rer = 70 * Math.pow(weightInKg, 0.75);
-    
-    // Activity multipliers
-    let multiplier = 1.6; // Normal activity
-    if (activityLevel === "low") multiplier = 1.2;
-    if (activityLevel === "high") multiplier = 2.0;
-    
-    // Age adjustments
-    if (totalAgeMonths < 4) multiplier *= 3; // Puppies/kittens
-    else if (totalAgeMonths < 12) multiplier *= 2; // Young pets
-    else if (totalAgeMonths > 84) multiplier *= 0.8; // Senior pets
-    
-    const dailyCalories = Math.round(rer * multiplier);
-    
-    // Calculate food portions (assuming average dry food = 350 kcal/cup)
-    const caloriesPerCup = 350;
-    const foodPortion = parseFloat((dailyCalories / caloriesPerCup).toFixed(1));
-    
-    // Determine food type
+  const calc = () => {
+    if (!petType || !weight || !activity) return;
+    const kg = weightUnit === "lbs" ? parseFloat(weight) * 0.453592 : parseFloat(weight);
+    const totalMonths = parseInt(ageYears || "0") * 12 + parseInt(ageMonths || "0");
+    const rer = 70 * Math.pow(kg, 0.75);
+    let m = activity === "low" ? 1.2 : activity === "high" ? 2.0 : 1.6;
+    if (totalMonths < 4) m *= 3; else if (totalMonths < 12) m *= 2; else if (totalMonths > 84) m *= 0.8;
+    const daily = Math.round(rer * m);
+    const portion = parseFloat((daily / 350).toFixed(1));
     let foodType = "Dry food";
-    if (weightInKg < 5 || totalAgeMonths < 6) {
-      foodType = "Mix of wet and dry food";
-    } else if (totalAgeMonths > 96 && activityLevel === "low") {
-      foodType = "Soft dry or wet food";
-    }
-    
-    // Determine feeding frequency
-    let feedingFrequency = "2 times per day";
-    if (totalAgeMonths < 4) feedingFrequency = "3-4 times per day";
-    else if (totalAgeMonths < 12) feedingFrequency = "3 times per day";
-    else if (weightInKg > 25) feedingFrequency = "2 times per day";
-    
-    // Generate tip
+    if (kg < 5 || totalMonths < 6) foodType = "Mix of wet and dry food";
+    else if (totalMonths > 96 && activity === "low") foodType = "Soft dry or wet food";
+    let freq = "2 times per day";
+    if (totalMonths < 4) freq = "3–4 times per day";
+    else if (totalMonths < 12) freq = "3 times per day";
     const tips = [
-      "Always provide fresh water alongside meals for proper hydration.",
-      "Monitor your pet's weight regularly and adjust portions as needed.",
-      "Avoid feeding table scraps to maintain a balanced diet.",
-      "Split daily portions into multiple meals for better digestion.",
-      "Consult your vet if you notice sudden appetite changes.",
-      "Consider age-appropriate food formulas for optimal nutrition.",
+      "Always provide fresh water alongside meals.",
+      "Monitor weight regularly and adjust portions.",
+      "Avoid table scraps to keep the diet balanced.",
+      "Split daily portions into multiple meals.",
+      "Choose age-appropriate formulas.",
     ];
-    const randomTip = tips[Math.floor(Math.random() * tips.length)];
-    
     setResults({
-      dailyCalories,
-      foodPortion,
+      dailyCalories: daily,
+      foodPortion: portion,
       foodType,
-      feedingFrequency,
-      tip: randomTip,
+      feedingFrequency: freq,
+      tip: tips[Math.floor(Math.random() * tips.length)],
       petName: breed || petType,
     });
   };
 
-  const resetForm = () => {
-    setPetType("");
-    setBreed("");
-    setAgeYears("");
-    setAgeMonths("");
-    setWeight("");
-    setActivityLevel("");
-    setAllergies("");
-    setResults(null);
-  };
+  const reset = () => { setPetType(""); setBreed(""); setAgeYears(""); setAgeMonths(""); setWeight(""); setActivity(""); setAllergies(""); setResults(null); };
 
-  const products = [
-    {
-      name: "Royal Canin",
-      description: "Breed-specific nutrition formulas",
-      url: "https://www.chewy.com/b/royal-canin-237",
-    },
-    {
-      name: "Hill's Science Diet",
-      description: "Veterinarian-recommended nutrition",
-      url: "https://www.chewy.com/b/hills-science-diet-309",
-    },
-    {
-      name: "Blue Buffalo",
-      description: "Natural ingredients, no by-products",
-      url: "https://www.chewy.com/b/blue-buffalo-296",
-    },
-  ];
+  const canCalc = !!(petType && weight && activity);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <ToolShell
+      eyebrow="Diet Planner"
+      title="Pet Food & Diet Planner"
+      subtitle="Calculate the ideal daily portions, calories and feeding schedule for your pet."
+      disclaimer="Educational tool — always consult your veterinarian for tailored nutrition advice."
+    >
+      {!results ? (
+        <div className="space-y-6">
+          <ToolStep number={1} title="Pet type" complete={!!petType}>
+            <div className="grid grid-cols-3 gap-3">
+              {PET_TILES.map(({ value, icon: Icon }) => (
+                <button
+                  key={value}
+                  onClick={() => setPetType(value)}
+                  className={`p-5 rounded-xl border transition-all text-center ${
+                    petType === value ? "border-primary bg-primary/5 shadow-soft" : "bg-background hover:bg-muted"
+                  }`}
+                  style={petType !== value ? { borderColor: "hsl(var(--hairline))" } : undefined}
+                >
+                  <Icon className={`h-7 w-7 mx-auto mb-2 ${petType === value ? "text-primary" : "text-foreground/70"}`} />
+                  <span className="text-sm font-medium">{value}</span>
+                </button>
+              ))}
+            </div>
+          </ToolStep>
 
-      <main className="pt-24 pb-16">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <header className="text-center mb-12 animate-fade-in">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              Pet Food & Diet Planner
-            </h1>
-            <p className="text-xl text-muted-foreground mb-6">
-              Calculate the perfect daily food portions and calorie needs for your pet
-            </p>
-            <Alert className="mt-4 border-primary bg-primary/5">
-              <Heart className="h-4 w-4 text-primary" />
-              <AlertDescription className="text-sm">
-                <strong>Educational Tool:</strong> These calculations provide general guidance. Always consult your veterinarian for personalized nutrition advice tailored to your pet's specific health needs.
-              </AlertDescription>
-            </Alert>
-          </header>
-
-          {!results ? (
-            <section className="space-y-6 animate-fade-in" aria-label="Pet diet calculator form">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Pet Information</CardTitle>
-                  <CardDescription>
-                    Tell us about your pet to calculate their ideal diet
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="petType">Pet Type</Label>
-                    <div className="grid grid-cols-3 gap-4">
-                      <Button
-                        type="button"
-                        variant={petType === "Dog" ? "default" : "outline"}
-                        onClick={() => setPetType("Dog")}
-                        className="w-full"
-                      >
-                        Dog
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={petType === "Cat" ? "default" : "outline"}
-                        onClick={() => setPetType("Cat")}
-                        className="w-full"
-                      >
-                        Cat
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={petType === "Other" ? "default" : "outline"}
-                        onClick={() => setPetType("Other")}
-                        className="w-full"
-                      >
-                        Other
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="breed">Breed (Optional)</Label>
-                    <Input
-                      id="breed"
-                      type="text"
-                      placeholder="e.g., Golden Retriever, Persian Cat"
-                      value={breed}
-                      onChange={(e) => setBreed(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="ageYears">Age (Years)</Label>
-                      <Input
-                        id="ageYears"
-                        type="number"
-                        min="0"
-                        max="30"
-                        placeholder="0"
-                        value={ageYears}
-                        onChange={(e) => setAgeYears(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="ageMonths">Age (Months)</Label>
-                      <Input
-                        id="ageMonths"
-                        type="number"
-                        min="0"
-                        max="11"
-                        placeholder="0"
-                        value={ageMonths}
-                        onChange={(e) => setAgeMonths(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="weight">Weight</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="weight"
-                        type="number"
-                        min="0.1"
-                        step="0.1"
-                        placeholder="Enter weight"
-                        value={weight}
-                        onChange={(e) => setWeight(e.target.value)}
-                        className="flex-1"
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          variant={weightUnit === "kg" ? "default" : "outline"}
-                          onClick={() => setWeightUnit("kg")}
-                        >
-                          kg
-                        </Button>
-                        <Button
-                          type="button"
-                          variant={weightUnit === "lbs" ? "default" : "outline"}
-                          onClick={() => setWeightUnit("lbs")}
-                        >
-                          lbs
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="activityLevel">Activity Level</Label>
-                    <div className="grid grid-cols-3 gap-4">
-                      <Button
-                        type="button"
-                        variant={activityLevel === "low" ? "default" : "outline"}
-                        onClick={() => setActivityLevel("low")}
-                        className="w-full"
-                      >
-                        Low
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={activityLevel === "normal" ? "default" : "outline"}
-                        onClick={() => setActivityLevel("normal")}
-                        className="w-full"
-                      >
-                        Normal
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={activityLevel === "high" ? "default" : "outline"}
-                        onClick={() => setActivityLevel("high")}
-                        className="w-full"
-                      >
-                        High
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="allergies">Allergies (Optional)</Label>
-                    <Textarea
-                      id="allergies"
-                      placeholder="List any known food allergies or sensitivities"
-                      value={allergies}
-                      onChange={(e) => setAllergies(e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Button
-                onClick={calculateDiet}
-                disabled={!petType || !weight || !activityLevel}
-                className="w-full"
-                size="lg"
-              >
-                Calculate Diet Plan
-              </Button>
-            </section>
-          ) : (
-            <section className="space-y-6 animate-fade-in" aria-label="Diet plan results">
-              <Alert className="border-secondary bg-secondary/10">
-                <Heart className="h-4 w-4 text-secondary" />
-                <AlertDescription className="text-base font-medium">
-                  Perfect! 🐶 {results.petName} needs approximately{" "}
-                  <strong>{results.foodPortion} cups</strong> of {results.foodType.toLowerCase()} per day.
-                </AlertDescription>
-              </Alert>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <Card className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="mb-2 p-3 bg-primary/10 rounded-lg w-fit">
-                      <Utensils className="h-6 w-6 text-primary" />
-                    </div>
-                    <CardTitle>Daily Calories</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold text-primary">
-                      {results.dailyCalories} kcal
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Based on weight, age, and activity level
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="mb-2 p-3 bg-secondary/10 rounded-lg w-fit">
-                      <Pizza className="h-6 w-6 text-secondary" />
-                    </div>
-                    <CardTitle>Food Portion</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold text-secondary">
-                      {results.foodPortion} cups
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Or {Math.round(results.foodPortion * 240)} grams per day
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="mb-2 p-3 bg-accent/10 rounded-lg w-fit">
-                      <ShoppingBag className="h-6 w-6 text-accent" />
-                    </div>
-                    <CardTitle>Food Type</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-xl font-semibold text-foreground">
-                      {results.foodType}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Recommended based on pet profile
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="mb-2 p-3 bg-primary/10 rounded-lg w-fit">
-                      <Clock className="h-6 w-6 text-primary" />
-                    </div>
-                    <CardTitle>Feeding Frequency</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-xl font-semibold text-foreground">
-                      {results.feedingFrequency}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Split portions evenly throughout the day
-                    </p>
-                  </CardContent>
-                </Card>
+          <ToolStep number={2} title="Pet details" active={!!petType} complete={canCalc}>
+            <div className="space-y-5">
+              <div>
+                <Label className="text-sm">Breed (optional)</Label>
+                <Input className="mt-2 bg-background" placeholder="e.g. Golden Retriever" value={breed} onChange={(e) => setBreed(e.target.value)} />
               </div>
 
-              <Card className="border-accent bg-accent/5">
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Lightbulb className="h-5 w-5 text-accent" />
-                    <CardTitle>Nutrition Tip</CardTitle>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-sm">Age — years</Label>
+                  <Input className="mt-2 bg-background" type="number" min="0" max="30" placeholder="0" value={ageYears} onChange={(e) => setAgeYears(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-sm">Age — months</Label>
+                  <Input className="mt-2 bg-background" type="number" min="0" max="11" placeholder="0" value={ageMonths} onChange={(e) => setAgeMonths(e.target.value)} />
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-sm">Weight</Label>
+                <div className="flex gap-2 mt-2">
+                  <Input type="number" min="0.1" step="0.1" placeholder="Enter weight" value={weight} onChange={(e) => setWeight(e.target.value)} className="flex-1 bg-background" />
+                  <div className="inline-flex rounded-md border" style={{ borderColor: "hsl(var(--hairline))" }}>
+                    {(["kg", "lbs"] as const).map((u) => (
+                      <button key={u} onClick={() => setWeightUnit(u)} className={`px-4 text-sm ${weightUnit === u ? "bg-foreground text-background" : "bg-background hover:bg-muted"}`}>{u}</button>
+                    ))}
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-base">{results.tip}</p>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
-              {allergies && (
-                <Alert className="border-orange-500 bg-orange-50 dark:bg-orange-900/20">
-                  <AlertDescription>
-                    <strong>Allergy Note:</strong> Your pet has listed allergies: {allergies}. Please ensure selected food brands are allergen-free.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              <Card className="bg-muted/30">
-                <CardHeader>
-                  <CardTitle>Recommended Food Brands</CardTitle>
-                  <CardDescription>
-                    High-quality nutrition options for your pet (affiliate links)
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="grid md:grid-cols-3 gap-4">
-                  {products.map((product, index) => (
-                    <a
-                      key={index}
-                      href={product.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block p-4 bg-background rounded-lg border border-border hover:border-primary hover:shadow-md transition-all"
-                    >
-                      <h3 className="font-semibold text-lg mb-2">{product.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        {product.description}
-                      </p>
-                      <Button variant="outline" size="sm" className="w-full">
-                        View on Chewy
-                      </Button>
-                    </a>
+              <div>
+                <Label className="text-sm mb-2 block">Activity level</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { v: "low", l: "Low" },
+                    { v: "normal", l: "Normal" },
+                    { v: "high", l: "High" },
+                  ].map(({ v, l }) => (
+                    <button
+                      key={v}
+                      onClick={() => setActivity(v)}
+                      className={`py-3 rounded-lg border text-sm font-medium transition-all ${
+                        activity === v ? "border-primary bg-primary/5 text-primary" : "bg-background hover:bg-muted"
+                      }`}
+                      style={activity !== v ? { borderColor: "hsl(var(--hairline))" } : undefined}
+                    >{l}</button>
                   ))}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
-              <Button onClick={resetForm} variant="outline" className="w-full" size="lg">
-                Calculate for Another Pet
-              </Button>
-            </section>
+              <div>
+                <Label className="text-sm">Allergies (optional)</Label>
+                <Textarea className="mt-2 bg-background" rows={2} placeholder="Known food allergies or sensitivities" value={allergies} onChange={(e) => setAllergies(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <Button onClick={calc} disabled={!canCalc} size="lg" className="w-full">Generate diet plan</Button>
+            </div>
+          </ToolStep>
+        </div>
+      ) : (
+        <div className="space-y-5">
+          <ResultCard tone="success" title={`Plan for ${results.petName}`}>
+            <p className="text-base">
+              {results.petName} needs about <span className="font-display text-2xl text-primary">{results.foodPortion} cups</span> of {results.foodType.toLowerCase()} per day.
+            </p>
+          </ResultCard>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Stat icon={<Utensils className="h-5 w-5" />} label="Daily calories" value={`${results.dailyCalories} kcal`} />
+            <Stat icon={<Pizza className="h-5 w-5" />} label="Food portion" value={`${results.foodPortion} cups · ~${Math.round(results.foodPortion * 240)}g`} />
+            <Stat icon={<ShoppingBag className="h-5 w-5" />} label="Food type" value={results.foodType} />
+            <Stat icon={<Clock className="h-5 w-5" />} label="Feeding frequency" value={results.feedingFrequency} />
+          </div>
+
+          <ResultCard tone="info" title="Nutrition tip" icon={<Lightbulb className="h-5 w-5" />}>
+            {results.tip}
+          </ResultCard>
+
+          {allergies && (
+            <ResultCard tone="warning" title="Allergy note">
+              Your pet has listed allergies: <span className="text-foreground">{allergies}</span>. Make sure any chosen food is allergen-free.
+            </ResultCard>
           )}
 
-          <section className="mt-16 animate-fade-in">
-            <h2 className="text-3xl font-bold text-center mb-8">
-              Frequently Asked Questions
-            </h2>
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="item-1">
-                <AccordionTrigger className="text-left">
-                  How many times should I feed my dog daily?
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
-                  Adult dogs typically do well with 2 meals per day, while puppies under 6 months need 3-4 smaller meals. Senior dogs may benefit from 2-3 smaller portions to aid digestion. Always split the daily total into equal portions.
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-2">
-                <AccordionTrigger className="text-left">
-                  What's the best diet for indoor cats?
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
-                  Indoor cats have lower activity levels and need fewer calories to prevent obesity. Look for indoor-specific formulas with controlled calories, higher fiber for digestion, and quality protein. Wet food can help with hydration.
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-3">
-                <AccordionTrigger className="text-left">
-                  Can I mix dry and wet food?
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
-                  Yes! Mixing dry and wet food can provide variety and extra hydration. Generally, you can replace about 3 oz of wet food for every ¼ cup of dry food. Adjust total portions to maintain the correct daily calorie intake.
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-4">
-                <AccordionTrigger className="text-left">
-                  How accurate are these calorie calculations?
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
-                  Our calculator uses standard veterinary formulas (Resting Energy Requirement), but individual needs vary based on metabolism, health conditions, and breed specifics. Monitor your pet's weight and body condition, adjusting portions as needed with your vet's guidance.
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-5">
-                <AccordionTrigger className="text-left">
-                  Should I adjust portions for spayed/neutered pets?
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
-                  Yes, spayed and neutered pets often have lower metabolic rates and may need 10-20% fewer calories. Monitor their weight closely after the procedure and work with your vet to adjust portions to maintain a healthy body condition.
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </section>
+          <div className="flex justify-center">
+            <Button variant="outline" onClick={reset}>Plan another pet</Button>
+          </div>
         </div>
-      </main>
-
-      <Footer />
-    </div>
+      )}
+    </ToolShell>
   );
 };
+
+const Stat = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
+  <div className="rounded-2xl border bg-[hsl(var(--surface-elevated))] p-5 shadow-soft" style={{ borderColor: "hsl(var(--hairline))" }}>
+    <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wide mb-2">
+      {icon}<span>{label}</span>
+    </div>
+    <p className="font-display text-xl text-foreground leading-snug">{value}</p>
+  </div>
+);
 
 export default FoodPlanner;
