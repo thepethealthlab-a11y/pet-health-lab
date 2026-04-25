@@ -74,16 +74,7 @@ const Tools = () => {
       badge: "Free templates",
       badgeVariant: "default" as const,
       buttonText: "Create Alert",
-      link: "/tools/lost-pet-alert"
-    },
-    {
-      icon: MapPin,
-      title: "Emergency Vet Finder",
-      description: "Find nearby veterinary clinics and emergency services",
-      badge: "Free directory",
-      badgeVariant: "default" as const,
-      buttonText: "Find Vets",
-      link: "/tools/vet-finder"
+      link: "/tools/lost-pet-generator"
     }
   ];
 
