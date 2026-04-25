@@ -3,7 +3,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Apple, Utensils, Syringe, CreditCard, Megaphone, MapPin, AlertCircle } from "lucide-react";
+import { AlertTriangle, Apple, Utensils, Syringe, CreditCard, Megaphone, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSEO } from "@/hooks/useSEO";
 
