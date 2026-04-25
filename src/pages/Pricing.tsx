@@ -1,191 +1,224 @@
+import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Check, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const Pricing = () => {
-  const plans = [
-    {
-      name: "Free",
-      price: "$0",
-      period: "forever",
-      description: "Perfect for getting started with basic pet health tracking",
-      features: [
-        "7 Educational Tools",
-        "Symptom Guide (3 checks/month)",
-        "Toxic Food Scanner (unlimited)",
-        "Calorie Calculator (1 pet)",
-        "Vaccine Tracker (email reminders)",
-        "Expense Tracker (basic)",
-        "Lost Pet Generator",
-        "Vet Finder",
-        "1 Pet Profile",
-        "Health Journal",
-        "Educational Articles",
-        "Basic Community Access",
-        "Standard Support"
-      ],
-      cta: "Get Started Free",
-      popular: false
-    },
-    {
-      name: "Premium",
-      price: "$8.99",
-      period: "per month",
-      yearlyNote: "or $89/year",
-      description: "Advanced AI-powered features for comprehensive pet care",
-      features: [
-        "All 10 Tools Unlimited",
-        "Unlimited Symptom Checks",
-        "Advanced Features in all tools",
-        "Priority Support (24hr response)",
-        "5 Pet Profiles",
-        "AI Health Analysis",
-        "Predictive Insights",
-        "Smart Reminders (SMS + Email)",
-        "Comprehensive Reports (PDF export)",
-        "Receipt Scanning (OCR)",
-        "Budget Alerts & Trends",
-        "Ad-free Experience"
-      ],
-      cta: "Start 14-Day Free Trial",
-      popular: true
-    },
-    {
-      name: "Family",
-      price: "$15.99",
-      period: "per month",
-      description: "For households with multiple pets",
-      features: [
-        "Everything in Premium",
-        "Unlimited Pet Profiles",
-        "Family Member Sharing (up to 5 members)",
-        "Veterinarian Collaboration Tools",
-        "Advanced Analytics Dashboard",
-        "Custom Care Plans",
-        "Dedicated Account Manager",
-        "Priority Feature Requests"
-      ],
-      cta: "Start 14-Day Free Trial",
-      popular: false
-    }
-  ];
+type BillingCycle = "monthly" | "yearly";
 
-  const faqs = [
-    {
-      question: "Can I cancel anytime?",
-      answer: "Yes, cancel anytime with no questions asked. Your data stays accessible."
-    },
-    {
-      question: "What payment methods do you accept?",
-      answer: "We accept all major credit cards, PayPal, and Apple Pay via Lemon Squeezy."
-    },
-    {
-      question: "Is there a free trial?",
-      answer: "Yes! Premium and Family plans include a 14-day free trial. No credit card required."
-    },
-    {
-      question: "What if I have more than 5 pets?",
-      answer: "Contact us for a custom enterprise plan tailored to your needs."
-    },
-    {
-      question: "Can I switch plans?",
-      answer: "Yes, upgrade or downgrade anytime. Changes take effect immediately."
-    },
-    {
-      question: "Do you offer refunds?",
-      answer: "Yes, 14-day money-back guarantee on all paid plans, no questions asked."
-    }
-  ];
+interface Plan {
+  name: string;
+  tagline: string;
+  monthly: number;
+  yearly: number; // per month when billed yearly
+  description: string;
+  features: string[];
+  cta: string;
+  popular?: boolean;
+  highlight?: boolean;
+}
+
+const PLANS: Plan[] = [
+  {
+    name: "Free",
+    tagline: "Start here",
+    monthly: 0,
+    yearly: 0,
+    description: "Essential pet care tools with monthly limits.",
+    features: [
+      "1 pet profile",
+      "Symptom Checker — 3 / month",
+      "Behavior Solver — 3 / month",
+      "Toxic Food Scanner — unlimited",
+      "Calorie & Cost Calculators — unlimited",
+      "Lost Pet Poster — unlimited",
+      "Community access",
+    ],
+    cta: "Get started",
+  },
+  {
+    name: "Premium",
+    tagline: "Most popular",
+    monthly: 2,
+    yearly: 1.67,
+    description: "Unlimited AI tools and tracking for one pet parent.",
+    features: [
+      "Up to 3 pet profiles",
+      "Unlimited Symptom & Behavior checks",
+      "Vaccine Tracker with reminders",
+      "Expense Tracker + CSV export",
+      "Food & Diet Planner",
+      "Email + SMS reminders",
+      "Priority support",
+    ],
+    cta: "Choose Premium",
+    popular: true,
+  },
+  {
+    name: "Family",
+    tagline: "For households",
+    monthly: 4,
+    yearly: 3.33,
+    description: "Share care across multiple pets and family members.",
+    features: [
+      "Up to 8 pet profiles",
+      "Everything in Premium",
+      "Share with up to 5 family members",
+      "WhatsApp reminders",
+      "Receipt scanning (OCR)",
+      "PDF health reports",
+    ],
+    cta: "Choose Family",
+  },
+  {
+    name: "Pro",
+    tagline: "For vets & breeders",
+    monthly: 6,
+    yearly: 5,
+    description: "Advanced tools for professionals and large households.",
+    features: [
+      "Unlimited pet profiles",
+      "Everything in Family",
+      "Vet collaboration workspace",
+      "Custom care plans",
+      "Advanced analytics",
+      "Dedicated account manager",
+      "Early access to new tools",
+    ],
+    cta: "Choose Pro",
+    highlight: true,
+  },
+];
+
+const Pricing = () => {
+  const [cycle, setCycle] = useState<BillingCycle>("monthly");
+  const isYearly = cycle === "yearly";
+
+  const formatPrice = (plan: Plan) => {
+    const value = isYearly ? plan.yearly : plan.monthly;
+    if (value === 0) return "$0";
+    return `$${Number.isInteger(value) ? value : value.toFixed(2)}`;
+  };
 
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      
-      <main className="pt-24 pb-16">
+
+      <main className="pt-28 pb-20">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center mb-16 space-y-4 animate-fade-in">
-            <h1 className="text-4xl md:text-6xl font-bold text-foreground">
-              Simple, Transparent Pricing
+          {/* Header */}
+          <div className="max-w-3xl mx-auto text-center mb-12 animate-fade-in">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border text-xs uppercase tracking-widest text-muted-foreground mb-6"
+              style={{ borderColor: "hsl(var(--hairline))" }}>
+              <Sparkles className="h-3.5 w-3.5" />
+              Pricing
+            </div>
+            <h1 className="font-display text-5xl md:text-6xl font-light text-foreground mb-4">
+              Care that scales with your family
             </h1>
-            <p className="text-xl text-muted-foreground">
-              Choose the plan that's right for you and your pets. All plans include a 14-day money-back guarantee.
+            <p className="text-lg text-muted-foreground">
+              Start free with limited use, or unlock unlimited tools from $2/month.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto mb-16">
-            {plans.map((plan, index) => (
-              <Card 
-                key={index} 
-                className={`hover:shadow-lg transition-all animate-fade-in relative ${
-                  plan.popular ? 'border-primary shadow-lg scale-105' : ''
+          {/* Billing toggle */}
+          <div className="flex items-center justify-center gap-4 mb-14">
+            <span className={`text-sm transition-colors ${!isYearly ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+              Monthly
+            </span>
+            <Switch
+              checked={isYearly}
+              onCheckedChange={(v) => setCycle(v ? "yearly" : "monthly")}
+              aria-label="Toggle yearly billing"
+            />
+            <span className={`text-sm transition-colors ${isYearly ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+              Yearly
+            </span>
+            <Badge variant="secondary" className="ml-1">Save ~17%</Badge>
+          </div>
+
+          {/* Plans */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mb-20">
+            {PLANS.map((plan) => (
+              <Card
+                key={plan.name}
+                className={`relative flex flex-col transition-all hover:shadow-soft ${
+                  plan.popular ? "border-primary shadow-soft" : ""
                 }`}
+                style={plan.popular ? undefined : { borderColor: "hsl(var(--hairline))" }}
               >
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-gradient-primary text-primary-foreground px-4 py-1">
-                      Most Popular
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <Badge className="bg-gradient-premium text-primary-foreground px-3 py-1 text-xs uppercase tracking-wider">
+                      Most popular
                     </Badge>
                   </div>
                 )}
-                <CardHeader className="text-center pb-8 pt-8">
-                  <CardTitle className="text-2xl mb-2">{plan.name}</CardTitle>
-                  <div className="mb-4">
-                    <span className="text-5xl font-bold">{plan.price}</span>
-                    <span className="text-muted-foreground ml-2">/ {plan.period}</span>
-                    {plan.yearlyNote && (
-                      <div className="text-sm text-muted-foreground mt-1">{plan.yearlyNote}</div>
+                <CardHeader className="pb-4 pt-8">
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
+                    {plan.tagline}
+                  </p>
+                  <CardTitle className="font-display text-3xl font-light">{plan.name}</CardTitle>
+                  <div className="mt-4 flex items-baseline gap-1">
+                    <span className="font-display text-5xl font-light">{formatPrice(plan)}</span>
+                    {plan.monthly > 0 && (
+                      <span className="text-muted-foreground text-sm">/mo</span>
                     )}
                   </div>
-                  <CardDescription className="text-base">{plan.description}</CardDescription>
+                  {isYearly && plan.monthly > 0 && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Billed ${(plan.yearly * 12).toFixed(0)}/year
+                    </p>
+                  )}
+                  <CardDescription className="mt-3 text-sm leading-relaxed">
+                    {plan.description}
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <ul className="space-y-3">
-                    {plan.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                        <span className="text-sm">{feature}</span>
+                <CardContent className="flex-1 flex flex-col">
+                  <ul className="space-y-2.5 mb-8 flex-1">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-2.5 text-sm">
+                        <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                        <span className="text-foreground/90">{feature}</span>
                       </li>
                     ))}
                   </ul>
-                  <Button 
-                    variant={plan.name === "Free" ? "outline" : "default"} 
-                    className="w-full" 
+                  <Button
+                    variant={plan.popular ? "default" : "outline"}
+                    className="w-full"
                     size="lg"
                     asChild
                   >
-                    <Link to="/signup">{plan.cta}</Link>
+                    <Link to="/login">{plan.cta}</Link>
                   </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
 
-          <div className="max-w-5xl mx-auto space-y-16">
-            {/* FAQ Section */}
-            <Card className="bg-muted/30">
-              <CardHeader>
-                <CardTitle className="text-2xl">Frequently Asked Questions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {faqs.map((faq, index) => (
-                  <div key={index}>
-                    <h3 className="font-semibold mb-2">{faq.question}</h3>
-                    <p className="text-muted-foreground">{faq.answer}</p>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            {/* Ready to Upgrade Banner */}
-            <div className="text-center bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl p-12 border border-primary/20">
-              <h2 className="text-3xl font-bold mb-4 text-foreground">Ready to Upgrade?</h2>
-              <Button size="lg" asChild className="hover-scale">
-                <Link to="/pricing">See Pricing Plans</Link>
-              </Button>
+          {/* FAQ */}
+          <div className="max-w-3xl mx-auto">
+            <h2 className="font-display text-3xl font-light text-center mb-8">
+              Common questions
+            </h2>
+            <div className="space-y-4">
+              {[
+                { q: "Can I start free?", a: "Yes — the Free tier lets you try every essential tool with monthly limits, no card required." },
+                { q: "Can I cancel anytime?", a: "Cancel from your dashboard anytime. You'll keep access until the end of your billing period." },
+                { q: "How much do I save with yearly?", a: "Yearly billing saves roughly 17% — about 2 months free compared to monthly." },
+                { q: "Do you offer refunds?", a: "Yes — 14-day money-back guarantee on all paid plans." },
+              ].map((f) => (
+                <Card key={f.q} style={{ borderColor: "hsl(var(--hairline))" }}>
+                  <CardContent className="p-6">
+                    <h3 className="font-medium mb-2">{f.q}</h3>
+                    <p className="text-sm text-muted-foreground">{f.a}</p>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         </div>
