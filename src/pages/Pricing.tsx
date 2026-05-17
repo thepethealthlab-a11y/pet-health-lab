@@ -229,12 +229,7 @@ const Pricing = () => {
               Common questions
             </h2>
             <div className="space-y-4">
-              {[
-                { q: "Can I start free?", a: "Yes — the Free tier lets you try every essential tool with monthly limits, no card required." },
-                { q: "Can I cancel anytime?", a: "Cancel from your dashboard anytime. You'll keep access until the end of your billing period." },
-                { q: "How much do I save with yearly?", a: "Yearly billing saves roughly 17% — about 2 months free compared to monthly." },
-                { q: "Do you offer refunds?", a: "Yes — 14-day money-back guarantee on all paid plans." },
-              ].map((f) => (
+              {PRICING_FAQ.map((f) => (
                 <Card key={f.q} style={{ borderColor: "hsl(var(--hairline))" }}>
                   <CardContent className="p-6">
                     <h3 className="font-medium mb-2">{f.q}</h3>
