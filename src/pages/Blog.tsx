@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, ArrowRight, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useEffect } from "react";
+
 
 import { useSEO } from "@/hooks/useSEO";
 
