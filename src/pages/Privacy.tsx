@@ -170,7 +170,7 @@ const Privacy = () => {
                 <p><strong>Restriction:</strong> Request limitation on how we use your information</p>
 
                 <p className="mt-4">
-                  To exercise these rights, contact us at <strong>privacy@thepethealthlab.com</strong>
+                  To exercise these rights, contact us at <strong>privacy@pet-health-lab.lovable.app</strong>
                 </p>
               </CardContent>
             </Card>
@@ -296,7 +296,7 @@ const Privacy = () => {
                   please contact us at:
                 </p>
                 <p className="font-semibold">
-                  Email: privacy@thepethealthlab.com<br />
+                  Email: privacy@pet-health-lab.lovable.app<br />
                   Address: [Your Business Address]<br />
                   Data Protection Officer: [DPO Contact]
                 </p>

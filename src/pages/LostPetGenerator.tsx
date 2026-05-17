@@ -22,7 +22,7 @@ const LostPetGenerator = () => {
   useSEO({
     title: "Lost Pet Poster Generator | ThePetHealthLab",
     description: "Create instant printable lost pet posters and share alerts with your community.",
-    canonical: "https://thepethealthlab.com/tools/lost-pet-generator",
+    canonical: "https://pet-health-lab.lovable.app/tools/lost-pet-generator",
   });
 
   const { toast } = useToast();

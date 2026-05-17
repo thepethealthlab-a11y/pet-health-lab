@@ -20,7 +20,7 @@ const PetCostCalculator = () => {
   useSEO({
     title: "Pet Cost Calculator — Estimate Pet Ownership Expenses | ThePetHealthLab",
     description: "Calculate estimated initial, monthly, yearly and lifetime pet ownership costs for dogs, cats, birds and rabbits.",
-    canonical: "https://thepethealthlab.com/tools/cost-calculator",
+    canonical: "https://pet-health-lab.lovable.app/tools/cost-calculator",
   });
 
   const [petType, setPetType] = useState("");

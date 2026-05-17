@@ -26,7 +26,7 @@ const VaccineScheduler = () => {
   useSEO({
     title: "Vaccination Schedule Tracker | ThePetHealthLab",
     description: "Never miss important vaccinations with smart reminders. Track your pet's vaccine schedule easily.",
-    canonical: "https://thepethealthlab.com/tools/vaccine-tracker",
+    canonical: "https://pet-health-lab.lovable.app/tools/vaccine-tracker",
   });
 
   return (

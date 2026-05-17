@@ -12,7 +12,7 @@ const Premium = () => {
     title: "Premium Pet Health Tools - Advanced AI Features | ThePetHealthLab",
     description: "Unlock unlimited symptom checks, health analytics, smart reminders, and multi-pet management. Premium AI-powered pet health tools for comprehensive care.",
     keywords: "premium pet health, pet health analytics, unlimited symptom checks, multi-pet manager, pet health AI",
-    canonical: "https://thepethealthlab.com/premium"
+    canonical: "https://pet-health-lab.lovable.app/premium"
   });
 
   const premiumTools = [

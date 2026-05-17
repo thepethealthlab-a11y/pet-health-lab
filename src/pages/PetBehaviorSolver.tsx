@@ -48,7 +48,7 @@ const PetBehaviorSolver = () => {
     description:
       "Understand and resolve common pet behavior issues with structured AI-powered guidance.",
     keywords: "pet behavior, dog behavior, cat behavior, pet training",
-    canonical: "https://thepethealthlab.com/tools/pet-behavior-problem-solver",
+    canonical: "https://pet-health-lab.lovable.app/tools/pet-behavior-problem-solver",
   });
 
   const [petType, setPetType] = useState("");
