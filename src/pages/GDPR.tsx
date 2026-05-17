@@ -131,9 +131,9 @@ const GDPR = () => {
                   To exercise any of your GDPR rights, you can:
                 </p>
                 <ul className="list-disc pl-6 space-y-2">
-                  <li><strong>Email us:</strong> privacy@thepethealthlab.com with your request</li>
+                  <li><strong>Email us:</strong> privacy@pet-health-lab.lovable.app with your request</li>
                   <li><strong>Use your account settings:</strong> Update or delete information directly in your profile</li>
-                  <li><strong>Contact our Data Protection Officer:</strong> dpo@thepethealthlab.com</li>
+                  <li><strong>Contact our Data Protection Officer:</strong> dpo@pet-health-lab.lovable.app</li>
                 </ul>
                 <p className="text-sm text-muted-foreground bg-muted/30 p-4 rounded-lg mt-4">
                   <strong>Response Time:</strong> We will respond to your request within 30 days. If we need more 
@@ -271,7 +271,7 @@ const GDPR = () => {
                 </p>
                 <p>
                   However, we would appreciate the opportunity to address your concerns first. Please contact 
-                  us at privacy@thepethealthlab.com.
+                  us at privacy@pet-health-lab.lovable.app.
                 </p>
               </CardContent>
             </Card>
@@ -286,7 +286,7 @@ const GDPR = () => {
                   Protection Officer:
                 </p>
                 <p className="font-semibold">
-                  Email: dpo@thepethealthlab.com<br />
+                  Email: dpo@pet-health-lab.lovable.app<br />
                   Address: [Your Business Address]<br />
                   Response Time: Within 30 days
                 </p>

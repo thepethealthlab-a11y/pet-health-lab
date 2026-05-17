@@ -255,7 +255,7 @@ const Terms = () => {
                   For questions about these Terms of Service, please contact us at:
                 </p>
                 <p className="font-semibold">
-                  Email: legal@thepethealthlab.com<br />
+                  Email: legal@pet-health-lab.lovable.app<br />
                   Address: [Your Business Address]
                 </p>
               </CardContent>

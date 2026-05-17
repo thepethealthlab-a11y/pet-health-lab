@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { useSEO } from "@/hooks/useSEO";
 
 interface Category {
   id: string;
@@ -30,6 +31,11 @@ interface Thread {
 const Community = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  useSEO({
+    title: "Pet Parent Community Forum — ThePetHealthLab",
+    description: "Join a peer-support community of pet parents. Ask questions, share experiences, and learn from others across health, behavior and nutrition.",
+    canonical: "https://pet-health-lab.lovable.app/community",
+  });
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [threads, setThreads] = useState<Thread[]>([]);

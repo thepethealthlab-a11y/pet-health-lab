@@ -12,13 +12,13 @@ const Tools = () => {
     title: "Free Pet Health Tools - AI-Powered Pet Care Analysis | ThePetHealthLab",
     description: "Access free pet health tools including symptom checker, toxic food scanner, behavior analyzer, and more. Educational resources for informed pet care decisions.",
     keywords: "pet health tools, pet symptom checker, toxic food scanner, pet behavior, vaccination tracker",
-    canonical: "https://thepethealthlab.com/tools",
+    canonical: "https://pet-health-lab.lovable.app/tools",
     schema: {
       "@context": "https://schema.org",
       "@type": "CollectionPage",
       "name": "Free Pet Health Tools",
       "description": "Educational pet health tools and resources",
-      "url": "https://thepethealthlab.com/tools"
+      "url": "https://pet-health-lab.lovable.app/tools"
     }
   });
   const freeTools = [

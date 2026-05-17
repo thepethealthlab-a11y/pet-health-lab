@@ -51,7 +51,7 @@ const SymptomChecker = () => {
     description:
       "Premium educational tool to understand pet symptoms and learn when to consult your veterinarian.",
     keywords: "pet symptoms, dog symptoms, cat symptoms, pet health information",
-    canonical: "https://thepethealthlab.com/tools/symptom-checker",
+    canonical: "https://pet-health-lab.lovable.app/tools/symptom-checker",
   });
 
   const [petType, setPetType] = useState("");

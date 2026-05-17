@@ -57,7 +57,7 @@ const ToxicFoodScanner = () => {
   useSEO({
     title: "Toxic Food Database for Pets | ThePetHealthLab",
     description: "Check if a food is safe for your pet. Search common foods instantly with toxicity information and safety guidelines.",
-    canonical: "https://thepethealthlab.com/tools/toxic-food",
+    canonical: "https://pet-health-lab.lovable.app/tools/toxic-food",
   });
 
   const [searchQuery, setSearchQuery] = useState("");

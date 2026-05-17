@@ -228,7 +228,7 @@ const Cookies = () => {
                   If you have questions about our use of cookies or this Cookie Policy, please contact us:
                 </p>
                 <p className="font-semibold">
-                  Email: privacy@thepethealthlab.com<br />
+                  Email: privacy@pet-health-lab.lovable.app<br />
                   Address: [Your Business Address]
                 </p>
               </CardContent>

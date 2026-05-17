@@ -28,7 +28,7 @@ const FoodPlanner = () => {
   useSEO({
     title: "Pet Food & Diet Planner | ThePetHealthLab",
     description: "Calculate your dog or cat's ideal daily diet, calories and feeding guide with our pet nutrition planner.",
-    canonical: "https://thepethealthlab.com/tools/food-planner",
+    canonical: "https://pet-health-lab.lovable.app/tools/food-planner",
   });
 
   const [petType, setPetType] = useState("");

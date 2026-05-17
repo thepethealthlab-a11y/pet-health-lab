@@ -11,21 +11,46 @@ import { useSEO } from "@/hooks/useSEO";
 
 const Index = () => {
   useSEO({
-    title: "ThePetHealthLab - AI-Powered Pet Care & Health Analysis Platform",
-    description: "Advanced AI technology meets veterinary science. Get instant pet health insights, symptom analysis, and personalized care recommendations. Trusted by 50,000+ pet parents.",
+    title: "ThePetHealthLab — AI Pet Health & Care Tools",
+    description: "AI-powered pet symptom checks, toxic food lookup, calorie planning and more. Educational tools trusted by 50,000+ pet parents.",
     keywords: "pet health, AI pet care, veterinary AI, pet symptoms, dog health, cat health, pet wellness",
-    canonical: "https://thepethealthlab.com/",
+    canonical: "https://pet-health-lab.lovable.app/",
     schema: {
       "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "ThePetHealthLab",
-      "url": "https://thepethealthlab.com",
-      "description": "AI-powered pet health analysis and educational platform",
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": "https://thepethealthlab.com/tools?q={search_term_string}",
-        "query-input": "required name=search_term_string"
-      }
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "name": "ThePetHealthLab",
+          "url": "https://pet-health-lab.lovable.app",
+          "description": "AI-powered pet health analysis and educational platform",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://pet-health-lab.lovable.app/tools?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "Are these tools a replacement for veterinary care?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "No, our tools provide educational information only. Always consult your veterinarian for medical diagnosis and treatment."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How accurate are your AI health insights?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Our tools offer research-based educational information. For medical concerns, always consult your veterinarian."
+              }
+            }
+          ]
+        }
+      ]
     }
   });
 

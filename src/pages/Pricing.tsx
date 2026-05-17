@@ -7,6 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Check, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useSEO } from "@/hooks/useSEO";
+
+const PRICING_FAQ = [
+  { q: "Can I start free?", a: "Yes — the Free tier lets you try every essential tool with monthly limits, no card required." },
+  { q: "Can I cancel anytime?", a: "Cancel from your dashboard anytime. You'll keep access until the end of your billing period." },
+  { q: "How much do I save with yearly?", a: "Yearly billing saves roughly 17% — about 2 months free compared to monthly." },
+  { q: "Do you offer refunds?", a: "Yes — 14-day money-back guarantee on all paid plans." },
+];
 
 type BillingCycle = "monthly" | "yearly";
 
@@ -97,6 +105,21 @@ const PLANS: Plan[] = [
 const Pricing = () => {
   const [cycle, setCycle] = useState<BillingCycle>("monthly");
   const isYearly = cycle === "yearly";
+
+  useSEO({
+    title: "Pricing — ThePetHealthLab Plans from $2/mo",
+    description: "Start free or unlock unlimited AI pet tools from $2/month. Compare Free, Premium, Family and Pro plans with yearly savings.",
+    canonical: "https://pet-health-lab.lovable.app/pricing",
+    schema: {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": PRICING_FAQ.map((f) => ({
+        "@type": "Question",
+        "name": f.q,
+        "acceptedAnswer": { "@type": "Answer", "text": f.a },
+      })),
+    },
+  });
 
   const formatPrice = (plan: Plan) => {
     const value = isYearly ? plan.yearly : plan.monthly;
@@ -206,12 +229,7 @@ const Pricing = () => {
               Common questions
             </h2>
             <div className="space-y-4">
-              {[
-                { q: "Can I start free?", a: "Yes — the Free tier lets you try every essential tool with monthly limits, no card required." },
-                { q: "Can I cancel anytime?", a: "Cancel from your dashboard anytime. You'll keep access until the end of your billing period." },
-                { q: "How much do I save with yearly?", a: "Yearly billing saves roughly 17% — about 2 months free compared to monthly." },
-                { q: "Do you offer refunds?", a: "Yes — 14-day money-back guarantee on all paid plans." },
-              ].map((f) => (
+              {PRICING_FAQ.map((f) => (
                 <Card key={f.q} style={{ borderColor: "hsl(var(--hairline))" }}>
                   <CardContent className="p-6">
                     <h3 className="font-medium mb-2">{f.q}</h3>

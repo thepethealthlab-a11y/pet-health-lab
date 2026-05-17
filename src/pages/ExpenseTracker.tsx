@@ -36,7 +36,7 @@ const ExpenseTracker = () => {
   useSEO({
     title: "Pet Expense Tracker | ThePetHealthLab",
     description: "Track all your pet expenses in one place — see spending by category and export to CSV.",
-    canonical: "https://thepethealthlab.com/tools/expense-tracker",
+    canonical: "https://pet-health-lab.lovable.app/tools/expense-tracker",
   });
 
   return (

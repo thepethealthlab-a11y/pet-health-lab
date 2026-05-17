@@ -12,6 +12,7 @@ const Hero = () => {
           alt="Modern pet health laboratory with advanced AI technology for analyzing pet health and wellness" 
           className="w-full h-full object-cover"
           loading="eager"
+          fetchPriority="high"
           width="1920"
           height="1080"
         />

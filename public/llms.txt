@@ -1,0 +1,35 @@
+# ThePetHealthLab
+
+> AI-powered, educational pet health and care platform. Free and premium tools to help pet parents make informed decisions — never a substitute for veterinary care.
+
+## Pages
+
+- [Home](/): Overview of the platform and featured tools.
+- [Free Tools](/tools): Directory of free pet health and care tools.
+- [Premium Tools](/premium): Advanced AI-powered tools for premium users.
+- [Pricing](/pricing): Free, Premium, Family and Pro plan details.
+- [Blog](/blog): Research-backed articles on pet health, behavior and nutrition.
+- [Community](/community): Peer support forum for pet parents.
+- [Dashboard](/dashboard): User dashboard for tracking pets and tools.
+- [Login](/login): Sign in with Google or email.
+- [Signup](/signup): Create an account with Google.
+
+## Tools
+
+- [Symptom Checker](/tools/symptom-checker): Educational AI symptom guide.
+- [Toxic Food Scanner](/tools/toxic-food-scanner): Look up foods harmful to pets.
+- [Calorie Calculator](/tools/calorie-calculator): Daily calorie estimates for pets.
+- [Food Planner](/tools/food-planner): Portion and feeding planner.
+- [Vaccine Scheduler](/tools/vaccine-scheduler): Track vaccinations and reminders.
+- [Pet Cost Calculator](/tools/cost-calculator): Estimate pet care costs.
+- [Expense Tracker](/tools/expense-tracker): Log and review pet spending.
+- [Pet Behavior Solver](/tools/pet-behavior-problem-solver): Educational behavior guidance.
+- [Lost Pet Poster](/tools/lost-pet-generator): Create lost pet posters and alerts.
+
+## Optional
+
+- [Disclaimer](/disclaimer)
+- [Terms](/terms)
+- [Privacy](/privacy)
+- [Cookies](/cookies)
+- [GDPR](/gdpr)

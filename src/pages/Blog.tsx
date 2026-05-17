@@ -5,16 +5,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, ArrowRight, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useEffect } from "react";
+
+
+import { useSEO } from "@/hooks/useSEO";
 
 const Blog = () => {
-  useEffect(() => {
-    document.title = "Pet Health Blog - Educational Resources | The Pet Health Lab";
-    const metaDescription = document.querySelector('meta[name="description"]');
-    if (metaDescription) {
-      metaDescription.setAttribute("content", "Research-backed articles, expert insights, and educational resources for informed pet care. Learn about pet health, behavior, nutrition, and safety.");
-    }
-  }, []);
+  useSEO({
+    title: "Pet Health Blog — Educational Resources",
+    description: "Research-backed articles, expert insights, and educational resources for informed pet care, behavior, nutrition and safety.",
+    canonical: "https://pet-health-lab.lovable.app/blog",
+    schema: {
+      "@context": "https://schema.org",
+      "@type": "Blog",
+      "name": "ThePetHealthLab Blog",
+      "url": "https://pet-health-lab.lovable.app/blog",
+      "description": "Educational pet health, behavior and nutrition articles.",
+    },
+  });
 
   const categories = [
     "Pet Health Education",
