@@ -75,6 +75,10 @@ const SymptomChecker = () => {
       toast.error("Please choose a pet and describe the symptoms.");
       return;
     }
+    if (usage.atLimit) {
+      toast.error("Free monthly limit reached. Upgrade for unlimited checks.");
+      return;
+    }
     setIsAnalyzing(true);
     try {
       const { data, error } = await supabase.functions.invoke("analyze-symptom", {
