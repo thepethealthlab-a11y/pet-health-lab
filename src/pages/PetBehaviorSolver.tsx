@@ -125,8 +125,13 @@ const PetBehaviorSolver = () => {
         toolName="the Behaviour Solver"
         reason="Sign in so we can keep a private log of your pet's behaviour history."
       >
-        {!results ? (
+        {usage.atLimit && !results ? (
+          <UpgradePrompt toolName="the Behaviour Solver" limit={FREE_LIMIT} />
+        ) : !results ? (
           <div className="space-y-5">
+            <div className="flex justify-end">
+              <UsageMeter loading={usage.loading} isPremium={usage.isPremium} used={usage.used} limit={FREE_LIMIT} />
+            </div>
             <ToolStep number={1} title="Which pet?" complete={!!petType}>
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
                 {PET_TYPES.map((p) => (
