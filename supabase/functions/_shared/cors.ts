@@ -1,11 +1,12 @@
 // Shared CORS configuration for edge functions
 
 const ALLOWED_ORIGINS = [
+  'https://pet-health-lab.lovable.app',
   'https://thepethealthlab.com',
   'https://www.thepethealthlab.com',
   'http://localhost:5173',
   'http://localhost:3000',
-  // Lovable preview URLs
+  // Lovable preview URLs handled below
 ];
 
 export const getCorsHeaders = (origin: string | null) => {
