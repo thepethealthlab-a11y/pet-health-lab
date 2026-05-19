@@ -98,6 +98,7 @@ const SymptomChecker = () => {
       }
       setResults(data);
       toast.success("Analysis complete");
+      usage.increment();
       setTimeout(() => {
         document.getElementById("results")?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 80);
