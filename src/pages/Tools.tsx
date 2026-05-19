@@ -50,7 +50,7 @@ const Tools = () => {
       badge: "3 free / month",
       badgeVariant: "secondary" as const,
       buttonText: "Solve Behaviour",
-      link: "/tools/pet-behavior-solver",
+      link: "/tools/pet-behavior-problem-solver",
     },
     {
       icon: Apple,
