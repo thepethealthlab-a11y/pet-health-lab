@@ -496,6 +496,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_usage: { Args: { p_feature: string }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
