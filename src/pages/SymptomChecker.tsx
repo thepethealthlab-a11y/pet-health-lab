@@ -66,6 +66,7 @@ const SymptomChecker = () => {
   const [duration, setDuration] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState<AnalysisResult | null>(null);
+  const usage = useUsageLimit("symptom_checker", FREE_LIMIT);
 
   const maxCharacters = 500;
 
