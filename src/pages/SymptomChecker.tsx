@@ -148,8 +148,13 @@ const SymptomChecker = () => {
       disclaimer="This is not a medical diagnosis. Always consult a licensed veterinarian for treatment."
     >
       <AuthGate toolName="the Symptom Guide" reason="Sign in so we can save your checks and personalise results.">
-        {!results ? (
+        {usage.atLimit && !results ? (
+          <UpgradePrompt toolName="the Symptom Guide" limit={FREE_LIMIT} />
+        ) : !results ? (
           <div className="space-y-5">
+            <div className="flex justify-end">
+              <UsageMeter loading={usage.loading} isPremium={usage.isPremium} used={usage.used} limit={FREE_LIMIT} />
+            </div>
             <ToolStep
               number={1}
               title="Which pet are we talking about?"
