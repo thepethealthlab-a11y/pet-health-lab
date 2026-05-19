@@ -28,7 +28,12 @@ import ToolShell from "@/components/tools/ToolShell";
 import ToolStep from "@/components/tools/ToolStep";
 import ResultCard from "@/components/tools/ResultCard";
 import AuthGate from "@/components/tools/AuthGate";
+import UpgradePrompt from "@/components/tools/UpgradePrompt";
+import UsageMeter from "@/components/tools/UsageMeter";
+import { useUsageLimit } from "@/hooks/useUsageLimit";
 import { cn } from "@/lib/utils";
+
+const FREE_LIMIT = 3;
 
 interface AnalysisResult {
   urgency: "HIGH" | "MEDIUM" | "LOW";
