@@ -85,6 +85,7 @@ const PetBehaviorSolver = () => {
         const parsed = JSON.parse(cleaned);
         setResults(parsed);
         toast.success("Analysis complete");
+        usage.increment();
         setTimeout(() => {
           document.getElementById("results")?.scrollIntoView({ behavior: "smooth", block: "start" });
         }, 80);
