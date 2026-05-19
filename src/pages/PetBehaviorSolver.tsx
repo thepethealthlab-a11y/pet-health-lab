@@ -62,10 +62,15 @@ const PetBehaviorSolver = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState<BehaviorResult | null>(null);
   const [copied, setCopied] = useState(false);
+  const usage = useUsageLimit("behavior_solver", FREE_LIMIT);
 
   const analyze = async () => {
     if (!petType || !petAge || !behaviorIssue.trim()) {
       toast.error("Please complete all three steps.");
+      return;
+    }
+    if (usage.atLimit) {
+      toast.error("Free monthly limit reached. Upgrade for unlimited analyses.");
       return;
     }
     setIsAnalyzing(true);
