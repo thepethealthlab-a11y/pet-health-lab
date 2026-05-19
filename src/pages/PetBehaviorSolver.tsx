@@ -26,7 +26,12 @@ import ToolShell from "@/components/tools/ToolShell";
 import ToolStep from "@/components/tools/ToolStep";
 import ResultCard from "@/components/tools/ResultCard";
 import AuthGate from "@/components/tools/AuthGate";
+import UpgradePrompt from "@/components/tools/UpgradePrompt";
+import UsageMeter from "@/components/tools/UsageMeter";
+import { useUsageLimit } from "@/hooks/useUsageLimit";
 import { cn } from "@/lib/utils";
+
+const FREE_LIMIT = 3;
 
 interface BehaviorResult {
   diagnosisSummary: string;
@@ -57,10 +62,15 @@ const PetBehaviorSolver = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState<BehaviorResult | null>(null);
   const [copied, setCopied] = useState(false);
+  const usage = useUsageLimit("behavior_solver", FREE_LIMIT);
 
   const analyze = async () => {
     if (!petType || !petAge || !behaviorIssue.trim()) {
       toast.error("Please complete all three steps.");
+      return;
+    }
+    if (usage.atLimit) {
+      toast.error("Free monthly limit reached. Upgrade for unlimited analyses.");
       return;
     }
     setIsAnalyzing(true);
@@ -75,6 +85,7 @@ const PetBehaviorSolver = () => {
         const parsed = JSON.parse(cleaned);
         setResults(parsed);
         toast.success("Analysis complete");
+        usage.increment();
         setTimeout(() => {
           document.getElementById("results")?.scrollIntoView({ behavior: "smooth", block: "start" });
         }, 80);
@@ -114,8 +125,13 @@ const PetBehaviorSolver = () => {
         toolName="the Behaviour Solver"
         reason="Sign in so we can keep a private log of your pet's behaviour history."
       >
-        {!results ? (
+        {usage.atLimit && !results ? (
+          <UpgradePrompt toolName="the Behaviour Solver" limit={FREE_LIMIT} />
+        ) : !results ? (
           <div className="space-y-5">
+            <div className="flex justify-end">
+              <UsageMeter loading={usage.loading} isPremium={usage.isPremium} used={usage.used} limit={FREE_LIMIT} />
+            </div>
             <ToolStep number={1} title="Which pet?" complete={!!petType}>
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
                 {PET_TYPES.map((p) => (

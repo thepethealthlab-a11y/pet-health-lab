@@ -28,7 +28,12 @@ import ToolShell from "@/components/tools/ToolShell";
 import ToolStep from "@/components/tools/ToolStep";
 import ResultCard from "@/components/tools/ResultCard";
 import AuthGate from "@/components/tools/AuthGate";
+import UpgradePrompt from "@/components/tools/UpgradePrompt";
+import UsageMeter from "@/components/tools/UsageMeter";
+import { useUsageLimit } from "@/hooks/useUsageLimit";
 import { cn } from "@/lib/utils";
+
+const FREE_LIMIT = 3;
 
 interface AnalysisResult {
   urgency: "HIGH" | "MEDIUM" | "LOW";
@@ -61,12 +66,17 @@ const SymptomChecker = () => {
   const [duration, setDuration] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState<AnalysisResult | null>(null);
+  const usage = useUsageLimit("symptom_checker", FREE_LIMIT);
 
   const maxCharacters = 500;
 
   const handleAnalyze = async () => {
     if (!petType || !symptoms.trim()) {
       toast.error("Please choose a pet and describe the symptoms.");
+      return;
+    }
+    if (usage.atLimit) {
+      toast.error("Free monthly limit reached. Upgrade for unlimited checks.");
       return;
     }
     setIsAnalyzing(true);
@@ -88,6 +98,7 @@ const SymptomChecker = () => {
       }
       setResults(data);
       toast.success("Analysis complete");
+      usage.increment();
       setTimeout(() => {
         document.getElementById("results")?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 80);
@@ -137,8 +148,13 @@ const SymptomChecker = () => {
       disclaimer="This is not a medical diagnosis. Always consult a licensed veterinarian for treatment."
     >
       <AuthGate toolName="the Symptom Guide" reason="Sign in so we can save your checks and personalise results.">
-        {!results ? (
+        {usage.atLimit && !results ? (
+          <UpgradePrompt toolName="the Symptom Guide" limit={FREE_LIMIT} />
+        ) : !results ? (
           <div className="space-y-5">
+            <div className="flex justify-end">
+              <UsageMeter loading={usage.loading} isPremium={usage.isPremium} used={usage.used} limit={FREE_LIMIT} />
+            </div>
             <ToolStep
               number={1}
               title="Which pet are we talking about?"
