@@ -38,6 +38,15 @@ const handler = async (req: Request): Promise<Response> => {
     const body: VaccineScheduleRequest = await req.json();
     const { email, petType, breed, birthDate, country, schedule } = body;
 
+    // HTML escape helper to prevent injection in email content
+    const esc = (s: unknown) =>
+      String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+
     // Input validation
     if (!email || typeof email !== 'string') {
       return new Response(
@@ -52,6 +61,15 @@ const handler = async (req: Request): Promise<Response> => {
       return new Response(
         JSON.stringify({ error: "Invalid email format" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Restrict sending to the authenticated user's own email to prevent
+    // attackers from sending phishing mail to arbitrary addresses.
+    if (!user.email || email.toLowerCase() !== user.email.toLowerCase()) {
+      return new Response(
+        JSON.stringify({ error: "Can only send the schedule to your own account email" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
